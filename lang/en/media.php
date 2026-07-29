@@ -17,6 +17,12 @@ return [
     ],
     'picker' => [
         'confirm' => 'Select :count item(s)',
+        'heading' => 'Choose media',
+        'open' => 'Choose from library',
+        'remove' => 'Remove :name',
+    ],
+    'validation' => [
+        'not-attachable' => 'The selected file is not available.',
     ],
     'columns' => [
         'preview' => 'Preview',

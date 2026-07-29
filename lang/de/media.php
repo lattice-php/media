@@ -17,6 +17,12 @@ return [
     ],
     'picker' => [
         'confirm' => ':count Element(e) auswählen',
+        'heading' => 'Medien auswählen',
+        'open' => 'Aus Mediathek wählen',
+        'remove' => ':name entfernen',
+    ],
+    'validation' => [
+        'not-attachable' => 'Die ausgewählte Datei ist nicht verfügbar.',
     ],
     'columns' => [
         'preview' => 'Vorschau',
