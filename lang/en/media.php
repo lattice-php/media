@@ -30,5 +30,19 @@ return [
             'label' => 'Upload',
             'toast' => ':count file(s) uploaded',
         ],
+        'update' => [
+            'label' => 'Edit',
+            'toast' => 'File updated',
+        ],
+        'delete' => [
+            'confirm-description' => 'This file is attached to :count record(s). Deleting removes it everywhere.',
+            'confirm-title' => 'Delete this file?',
+            'label' => 'Delete',
+            'toast' => 'File deleted',
+        ],
+        'delete-selected' => [
+            'label' => 'Delete selected',
+            'toast' => ':count file(s) deleted',
+        ],
     ],
 ];

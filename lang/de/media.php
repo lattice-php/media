@@ -30,5 +30,19 @@ return [
             'label' => 'Hochladen',
             'toast' => ':count Datei(en) hochgeladen',
         ],
+        'update' => [
+            'label' => 'Bearbeiten',
+            'toast' => 'Datei aktualisiert',
+        ],
+        'delete' => [
+            'confirm-description' => 'Diese Datei ist mit :count Datensatz(en) verknüpft. Das Löschen entfernt sie überall.',
+            'confirm-title' => 'Datei löschen?',
+            'label' => 'Löschen',
+            'toast' => 'Datei gelöscht',
+        ],
+        'delete-selected' => [
+            'label' => 'Ausgewählte löschen',
+            'toast' => ':count Datei(en) gelöscht',
+        ],
     ],
 ];

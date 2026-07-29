@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Lattice\Lattice\Actions\Components\Action;
+use Lattice\Lattice\Actions\Components\BulkAction;
 use Lattice\Lattice\Attributes\AsTable;
 use Lattice\Lattice\Tables\Columns\Column;
 use Lattice\Lattice\Tables\Columns\ImageColumn;
@@ -17,6 +18,7 @@ use Lattice\Lattice\Tables\Filters\DateRangeFilter;
 use Lattice\Lattice\Tables\Filters\Filter;
 use Lattice\Lattice\Tables\Sources\Eloquent\EloquentTableDefinition;
 use Lattice\Lattice\Tables\TableQuery;
+use Lattice\Media\Actions\DeleteSelectedMediaAction;
 use Lattice\Media\Models\Media;
 use Lattice\Media\Tables\Filters\MediaTypeFilter;
 
@@ -92,6 +94,6 @@ final class MediaTable extends EloquentTableDefinition
     #[\Override]
     public function bulkActions(): array
     {
-        return [];
+        return [BulkAction::use(DeleteSelectedMediaAction::class)];
     }
 }
