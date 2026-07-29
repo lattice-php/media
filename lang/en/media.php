@@ -6,6 +6,11 @@ return [
     'library' => [
         'heading' => 'Media library',
         'empty' => 'No media yet. Drop files anywhere to upload.',
+        'search' => 'Search media',
+        'selected' => ':count selected',
+    ],
+    'picker' => [
+        'confirm' => 'Select :count item(s)',
     ],
     'columns' => [
         'preview' => 'Preview',
@@ -18,6 +23,7 @@ return [
     ],
     'filters' => [
         'type' => [
+            'all' => 'All types',
             'label' => 'Type',
             'image' => 'Images',
             'video' => 'Video',

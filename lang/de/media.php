@@ -6,6 +6,11 @@ return [
     'library' => [
         'heading' => 'Mediathek',
         'empty' => 'Noch keine Medien. Dateien zum Hochladen hier ablegen.',
+        'search' => 'Medien suchen',
+        'selected' => ':count ausgewählt',
+    ],
+    'picker' => [
+        'confirm' => ':count Element(e) auswählen',
     ],
     'columns' => [
         'preview' => 'Vorschau',
@@ -18,6 +23,7 @@ return [
     ],
     'filters' => [
         'type' => [
+            'all' => 'Alle Typen',
             'label' => 'Typ',
             'image' => 'Bilder',
             'video' => 'Video',

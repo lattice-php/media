@@ -1,7 +1,9 @@
-import { createPlugin } from "@lattice-php/lattice";
+import { createPlugin, lazyComponent } from "@lattice-php/lattice";
 
 export default createPlugin({
   name: "media",
-  components: {},
+  components: {
+    "media.library": lazyComponent(() => import("./library")),
+  },
   i18n: { namespace: "media" },
 });
