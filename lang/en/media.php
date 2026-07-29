@@ -7,7 +7,13 @@ return [
         'heading' => 'Media library',
         'empty' => 'No media yet. Drop files anywhere to upload.',
         'search' => 'Search media',
+        'select' => 'Select :name',
         'selected' => ':count selected',
+        'upload-failed' => 'Upload failed',
+    ],
+    'detail' => [
+        'download' => 'Download',
+        'save' => 'Save',
     ],
     'picker' => [
         'confirm' => 'Select :count item(s)',

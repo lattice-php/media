@@ -7,7 +7,13 @@ return [
         'heading' => 'Mediathek',
         'empty' => 'Noch keine Medien. Dateien zum Hochladen hier ablegen.',
         'search' => 'Medien suchen',
+        'select' => ':name auswählen',
         'selected' => ':count ausgewählt',
+        'upload-failed' => 'Upload fehlgeschlagen',
+    ],
+    'detail' => [
+        'download' => 'Herunterladen',
+        'save' => 'Speichern',
     ],
     'picker' => [
         'confirm' => ':count Element(e) auswählen',
