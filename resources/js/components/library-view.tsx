@@ -72,11 +72,18 @@ export function LibraryView({ node, pick }: { node: Node; pick?: PickMode }) {
   );
 
   function toggle(row: MediaRow): void {
+    const key = String(row.id);
+    const wasSelected = selection.isSelected(key);
+
     if (pick && !pick.multiple) {
       selection.clear();
+
+      if (wasSelected) {
+        return;
+      }
     }
 
-    selection.toggle(String(row.id));
+    selection.toggle(key);
   }
 
   return (
