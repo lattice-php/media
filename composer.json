@@ -1,0 +1,21 @@
+{
+    "name": "lattice-php/media",
+    "description": "First-party media library for Lattice.",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Lattice\\Media\\": "src/",
+            "Lattice\\Media\\Database\\Factories\\": "database/factories/"
+        }
+    },
+    "extra": {
+        "lattice": {
+            "plugin": "resources/js/plugin.ts",
+            "discover": ["src"]
+        },
+        "laravel": {
+            "providers": ["Lattice\\Media\\MediaServiceProvider"]
+        }
+    }
+}
