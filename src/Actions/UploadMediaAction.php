@@ -105,8 +105,8 @@ final class UploadMediaAction extends FormActionDefinition
                     'disk' => $upload['disk'],
                     'path' => $upload['path'],
                     'name' => $upload['name'],
-                    'mime_type' => $upload['mime_type'],
-                    'size' => $upload['size'],
+                    'mime_type' => $upload['mime_type'] ?? 'application/octet-stream',
+                    'size' => $upload['size'] ?? 0,
                     'uploaded_by' => auth()->id(),
                 ]);
             }
