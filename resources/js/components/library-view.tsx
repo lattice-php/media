@@ -67,27 +67,27 @@ export function LibraryView({ node, pick }: { node: Node; pick?: PickMode }) {
           data-test="media-search"
           defaultValue={table.search}
           onChange={(event) => commitSearch(event.target.value)}
-          placeholder={t("library.search", "Search media")}
+          placeholder={t("media.library.search", "Search media")}
           type="search"
         />
         <NativeSelect
-          aria-label={t("filters.type.label", "Type")}
+          aria-label={t("media.filters.type.label", "Type")}
           className="max-w-40"
           data-test="media-type-filter"
           defaultValue=""
           onChange={(event) => table.setTableFilter("type", { value: event.target.value })}
         >
-          <option value="">{t("filters.type.all", "All types")}</option>
-          <option value="image">{t("filters.type.image", "Images")}</option>
-          <option value="video">{t("filters.type.video", "Video")}</option>
-          <option value="audio">{t("filters.type.audio", "Audio")}</option>
-          <option value="document">{t("filters.type.document", "Documents")}</option>
+          <option value="">{t("media.filters.type.all", "All types")}</option>
+          <option value="image">{t("media.filters.type.image", "Images")}</option>
+          <option value="video">{t("media.filters.type.video", "Video")}</option>
+          <option value="audio">{t("media.filters.type.audio", "Audio")}</option>
+          <option value="document">{t("media.filters.type.document", "Documents")}</option>
         </NativeSelect>
       </div>
 
       {rows.length === 0 && table.hasLoaded ? (
         <p className="py-12 text-center text-sm text-lt-muted-fg" data-test="media-empty">
-          {t("library.empty", "No media yet. Drop files anywhere to upload.")}
+          {t("media.library.empty", "No media yet. Drop files anywhere to upload.")}
         </p>
       ) : (
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -141,7 +141,7 @@ export function LibraryView({ node, pick }: { node: Node; pick?: PickMode }) {
             type="button"
             variant="primary"
           >
-            {t("picker.confirm", "Select {{count}} item(s)", {
+            {t("media.picker.confirm", "Select {{count}} item(s)", {
               count: selection.selectedKeys.length,
             })}
           </Button>
@@ -196,7 +196,9 @@ function BulkDeleteBar({
 
   return (
     <div className="sticky bottom-0 z-lt-sticky flex items-center justify-between gap-3 rounded-lt-sm border border-lt-border bg-lt-surface px-4 py-3 text-sm shadow-lt-md">
-      <span>{t("library.selected", "{{count}} selected", { count: selectedKeys.length })}</span>
+      <span>
+        {t("media.library.selected", "{{count}} selected", { count: selectedKeys.length })}
+      </span>
       <Button
         data-test="media-bulk-delete"
         disabled={processing}
