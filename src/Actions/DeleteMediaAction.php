@@ -21,11 +21,7 @@ final class DeleteMediaAction extends ActionDefinition
         return $action
             ->label(__('media::media.actions.delete.label'))
             ->method(HttpMethod::Delete)
-            ->variant(Variant::Danger)
-            ->confirm(
-                __('media::media.actions.delete.confirm-title'),
-                __('media::media.actions.delete.confirm-description'),
-            );
+            ->variant(Variant::Danger);
     }
 
     #[\Override]
