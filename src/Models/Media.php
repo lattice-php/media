@@ -72,6 +72,15 @@ final class Media extends Model
         return $this->url();
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    #[\Override]
+    public function toArray(): array
+    {
+        return [...parent::toArray(), 'url' => $this->url()];
+    }
+
     protected static function newFactory(): MediaFactory
     {
         return MediaFactory::new();
