@@ -25,4 +25,10 @@ return [
             'document' => 'Documents',
         ],
     ],
+    'actions' => [
+        'upload' => [
+            'label' => 'Upload',
+            'toast' => ':count file(s) uploaded',
+        ],
+    ],
 ];

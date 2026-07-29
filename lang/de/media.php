@@ -25,4 +25,10 @@ return [
             'document' => 'Dokumente',
         ],
     ],
+    'actions' => [
+        'upload' => [
+            'label' => 'Hochladen',
+            'toast' => ':count Datei(en) hochgeladen',
+        ],
+    ],
 ];
