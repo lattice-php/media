@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Lattice\Media;
 
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Lattice\Media\Models\Media;
+use Lattice\Media\Policies\MediaPolicy;
 
 final class MediaServiceProvider extends ServiceProvider
 {
@@ -16,6 +19,8 @@ final class MediaServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+
+        Gate::policy(Media::class, MediaPolicy::class);
 
         // Registered directly on the loader (not loadTranslationsFrom): the
         // i18next JSON route resolves only the translation loader, never the
