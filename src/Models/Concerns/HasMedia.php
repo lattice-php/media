@@ -22,13 +22,13 @@ trait HasMedia
     }
 
     /**
-     * @param  list<int|string>  $mediaIds
+     * @param  array<int, int|string>  $mediaIds
      */
     public function syncMedia(array $mediaIds, string $collection = 'default'): void
     {
         $sync = [];
 
-        foreach ($mediaIds as $index => $id) {
+        foreach (array_values($mediaIds) as $index => $id) {
             $sync[$id] = ['collection' => $collection, 'sort_order' => $index + 1];
         }
 
