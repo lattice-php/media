@@ -10,10 +10,13 @@ and a form field that attaches media to any model through a polymorphic pivot.
 composer require lattice-php/media
 ```
 
-That is the whole integration: the package ships its React renderer as source and Lattice's
-`lattice()` Vite plugin compiles it into your app's bundle via `virtual:lattice/plugins`. The PHP
-classes, migrations, config (`config/media.php`), and the default `Media` policy are picked up
-automatically.
+Requires the next `@lattice-php/lattice` release (> 0.26) — the package's components import core
+modules that older releases do not export, so a consumer build against 0.26 or earlier fails to
+resolve them.
+
+On the PHP side there is nothing to wire: the classes, migrations, config (`config/media.php`), and
+the default `Media` policy are picked up automatically. The React renderer ships as source and
+Lattice's `lattice()` Vite plugin compiles it into your app's bundle via `virtual:lattice/plugins`.
 
 ## Usage
 

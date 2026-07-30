@@ -1,6 +1,9 @@
 /.github export-ignore
 /.ai export-ignore
 /tests export-ignore
+/resources/js/test-setup.ts export-ignore
+/resources/js/test-support.ts export-ignore
+resources/js/**/*.test.* export-ignore
 /workbench export-ignore
 /.gitattributes export-ignore
 /.gitignore export-ignore
