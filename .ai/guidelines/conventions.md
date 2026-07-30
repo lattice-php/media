@@ -26,3 +26,10 @@
   prefix. Accepted types come from `config('media.accepted_types')` (mime patterns, `image/*` wildcards included).
 - **Version coupling.** The package requires `lattice-php/lattice` `^0.29`; features that depend on newer core APIs must
   bump that constraint and wait for the corresponding core release.
+
+## Lockfile regeneration
+
+When bumping npm dependencies, regenerate the lockfile with `node_modules` absent
+(`rm -rf node_modules package-lock.json && npm install`). An incremental
+`npm install` on macOS drops other platforms' optional dependencies (`@emnapi/*`)
+from the lockfile and breaks `npm ci` on the Linux CI runners.
