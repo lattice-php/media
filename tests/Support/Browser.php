@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Orchestra\Testbench\Factories\UserFactory;
 use Pest\Browser\Api\AwaitableWebpage;
@@ -52,6 +53,25 @@ function assertPresentEventually(AwaitableWebpage|PendingAwaitablePage|Webpage $
     retryUntil(function () use ($page, $selector): void {
         $page->assertPresent($selector);
     });
+}
+
+function rustfsIsReachable(): bool
+{
+    $key = 'lattice-test-probes/'.Str::uuid().'.txt';
+
+    try {
+        $disk = Storage::disk('s3');
+
+        if ($disk->put($key, 'ok') !== true) {
+            return false;
+        }
+
+        $disk->delete($key);
+
+        return true;
+    } catch (Throwable) {
+        return false;
+    }
 }
 
 /**

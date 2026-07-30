@@ -13,6 +13,7 @@ import type { BulkAction } from "@lattice-php/lattice/table/lib/bulk";
 import type { TableNode } from "@lattice-php/lattice/table/types";
 import { Button } from "@lattice-php/lattice/ui/button";
 import { Checkbox } from "@lattice-php/lattice/ui/checkbox";
+import { IconButton } from "@lattice-php/lattice/ui/icon-button";
 import { Input } from "@lattice-php/lattice/ui/input";
 import { NativeSelect } from "@lattice-php/lattice/ui/native-select";
 import { DetailPanel } from "./detail-panel";
@@ -31,7 +32,7 @@ export type MediaRow = {
   attachments_count: number;
 };
 
-export type PickMode = { multiple: boolean; onConfirm: (items: MediaRow[]) => void };
+export type PickMode = { multiple: boolean; max?: number; onConfirm: (items: MediaRow[]) => void };
 
 function actionNode(node: Node, key: string): Node<"action"> | undefined {
   return node.schema?.find((child) => child.key === key) as Node<"action"> | undefined;
@@ -56,7 +57,7 @@ export function LibraryView({ node, pick }: { node: Node; pick?: PickMode }) {
   const uploadAction = actionNode(node, "media-upload");
   const updateAction = actionNode(node, "media-update");
   const removeAction = actionNode(node, "media-delete");
-  const { uploads, addFiles } = useMediaUpload({
+  const { uploads, addFiles, retry, dismiss } = useMediaUpload({
     endpoint: uploadAction?.props.endpoint ?? "",
     ref: uploadAction?.props.ref ?? "",
     signed: props.signed,
@@ -65,7 +66,15 @@ export function LibraryView({ node, pick }: { node: Node; pick?: PickMode }) {
   const [dragActive, setDragActive] = useState(false);
   const [detailId, setDetailId] = useState<number | null>(null);
   const detailRow = rows.find((row) => row.id === detailId) ?? null;
+  // Pick-mode composition never passes these action nodes, and defensively they
+  // could be absent even outside pick mode — in either case there is no panel to
+  // portal, so a selected row must not block drops with no way to clear it.
+  const detail = updateAction && removeAction ? detailRow : null;
   const uploadLabel = uploadAction?.props.label ?? t("media.actions.upload.label", "Upload");
+  // The detail slideout and its confirm dialog portal above the grid, yet their
+  // drag events still bubble through this wrapper — a drop there is not an upload.
+  const acceptsDrop = detail === null;
+  const reloading = table.processing && table.hasLoaded;
   const commitSearch = useDebouncedCallback(
     (term: string) => table.setSearch(term),
     SEARCH_DEBOUNCE_MS,
@@ -81,6 +90,10 @@ export function LibraryView({ node, pick }: { node: Node; pick?: PickMode }) {
       if (wasSelected) {
         return;
       }
+    }
+
+    if (pick?.max !== undefined && !wasSelected && selection.selectedKeys.length >= pick.max) {
+      return;
     }
 
     selection.toggle(key);
@@ -99,12 +112,26 @@ export function LibraryView({ node, pick }: { node: Node; pick?: PickMode }) {
         }
       }}
       onDragOver={(event) => {
+        // HTML5 DnD only treats an element as a drop target if dragover is
+        // canceled; skipping this when the guard is closed lets the browser
+        // fall back to its native drop handling (navigating the tab to the
+        // dropped file), so preventDefault always runs first.
         event.preventDefault();
+
+        if (!acceptsDrop) {
+          return;
+        }
+
         setDragActive(true);
       }}
       onDrop={(event) => {
         event.preventDefault();
         setDragActive(false);
+
+        if (!acceptsDrop) {
+          return;
+        }
+
         addFiles(event.dataTransfer.files);
       }}
     >
@@ -162,15 +189,40 @@ export function LibraryView({ node, pick }: { node: Node; pick?: PickMode }) {
         <ul className="flex flex-wrap gap-2">
           {uploads.map((item) => (
             <li
-              className="flex max-w-56 items-center gap-2 rounded-lt-sm border border-lt-border bg-lt-surface px-2 py-1 text-sm"
+              className="flex max-w-64 items-center gap-2 rounded-lt-sm border border-lt-border bg-lt-surface px-2 py-1 text-sm"
               key={item.id}
             >
-              <span className="truncate text-lt-fg">{item.name}</span>
-              <span className={item.status === "error" ? "text-lt-danger" : "text-lt-muted-fg"}>
-                {item.status === "error"
-                  ? t("media.library.upload-failed", "Upload failed")
-                  : `${item.progress}%`}
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-lt-fg">{item.name}</span>
+                {item.status === "error" && (
+                  <span
+                    className="block truncate text-xs text-lt-danger"
+                    data-test="media-upload-reason"
+                  >
+                    {item.reason ?? t("media.library.upload-failed", "Upload failed")}
+                  </span>
+                )}
               </span>
+              {item.status === "error" ? (
+                <>
+                  <IconButton
+                    data-test="media-upload-retry"
+                    icon="rotate-ccw"
+                    label={t("media.library.upload-retry", "Retry {{name}}", { name: item.name })}
+                    onClick={() => retry(item)}
+                  />
+                  <IconButton
+                    data-test="media-upload-dismiss"
+                    icon="x"
+                    label={t("media.library.upload-dismiss", "Dismiss {{name}}", {
+                      name: item.name,
+                    })}
+                    onClick={() => dismiss(item.id)}
+                  />
+                </>
+              ) : (
+                <span className="text-lt-muted-fg">{`${item.progress}%`}</span>
+              )}
             </li>
           ))}
         </ul>
@@ -183,7 +235,14 @@ export function LibraryView({ node, pick }: { node: Node; pick?: PickMode }) {
             : t("media.library.empty", "No media yet. Drop files anywhere to upload.")}
         </p>
       ) : (
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <ul
+          aria-busy={reloading}
+          className={cn(
+            "grid grid-cols-2 gap-3 transition-opacity sm:grid-cols-3 lg:grid-cols-5",
+            reloading && "opacity-60",
+          )}
+          data-test="media-grid"
+        >
           {rows.map((row) => (
             <li className="relative" key={row.id}>
               <button
@@ -224,7 +283,21 @@ export function LibraryView({ node, pick }: { node: Node; pick?: PickMode }) {
       <div ref={table.infiniteLoaderRef} />
 
       {pick ? (
-        <div className="flex justify-end border-t border-lt-border pt-3">
+        <div className="flex items-center justify-end gap-3 border-t border-lt-border pt-3">
+          {pick.max !== undefined && (
+            <span
+              className={cn(
+                "text-sm text-lt-muted-fg",
+                selection.selectedKeys.length >= pick.max && "text-lt-danger",
+              )}
+              data-test="media-pick-counter"
+            >
+              {t("media.picker.selected-of-max", "{{count}}/{{max}} selected", {
+                count: selection.selectedKeys.length,
+                max: pick.max,
+              })}
+            </span>
+          )}
           <Button
             data-test="media-pick-confirm"
             disabled={!selection.active}
@@ -250,12 +323,12 @@ export function LibraryView({ node, pick }: { node: Node; pick?: PickMode }) {
         )
       )}
 
-      {detailRow && updateAction && removeAction && (
+      {detail && updateAction && removeAction && (
         <DetailPanel
-          key={detailRow.id}
+          key={detail.id}
           onClose={() => setDetailId(null)}
           remove={removeAction}
-          row={detailRow}
+          row={detail}
           update={updateAction}
         />
       )}

@@ -17,8 +17,12 @@ final class MediaLibraryPage extends WorkbenchPage
 
     public function render(PageSchema $schema): PageSchema
     {
-        return $schema->schema([
-            MediaLibrary::make(),
-        ]);
+        $library = MediaLibrary::make();
+
+        if (request()->boolean('signed')) {
+            $library->signedUpload()->disk('s3');
+        }
+
+        return $schema->schema([$library]);
     }
 }

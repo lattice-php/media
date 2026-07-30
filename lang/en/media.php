@@ -9,7 +9,10 @@ return [
         'search' => 'Search media',
         'select' => 'Select :name',
         'selected' => ':count selected',
+        'upload-dismiss' => 'Dismiss :name',
         'upload-failed' => 'Upload failed',
+        'upload-retry' => 'Retry :name',
+        'uploaded' => ':count file(s) uploaded',
     ],
     'detail' => [
         'download' => 'Download',
@@ -20,6 +23,7 @@ return [
         'heading' => 'Choose media',
         'open' => 'Choose from library',
         'remove' => 'Remove :name',
+        'selected-of-max' => ':count/:max selected',
     ],
     'validation' => [
         'not-attachable' => 'The selected file is not available.',

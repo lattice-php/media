@@ -2,6 +2,13 @@ laravel: '@testbench'
 
 env:
   - DB_CONNECTION=sqlite
+  - AWS_ACCESS_KEY_ID=herd
+  - AWS_SECRET_ACCESS_KEY=secretkey
+  - AWS_DEFAULT_REGION=us-east-1
+  - AWS_BUCKET=lattice
+  - AWS_ENDPOINT=https://rustfs.herd.test
+  - AWS_URL=https://rustfs.herd.test/lattice
+  - AWS_USE_PATH_STYLE_ENDPOINT=true
 
 migrations:
   - workbench/database/migrations

@@ -9,7 +9,10 @@ return [
         'search' => 'Medien suchen',
         'select' => ':name auswählen',
         'selected' => ':count ausgewählt',
+        'upload-dismiss' => ':name ausblenden',
         'upload-failed' => 'Upload fehlgeschlagen',
+        'upload-retry' => ':name erneut versuchen',
+        'uploaded' => ':count Datei(en) hochgeladen',
     ],
     'detail' => [
         'download' => 'Herunterladen',
@@ -20,6 +23,7 @@ return [
         'heading' => 'Medien auswählen',
         'open' => 'Aus Mediathek wählen',
         'remove' => ':name entfernen',
+        'selected-of-max' => ':count/:max ausgewählt',
     ],
     'validation' => [
         'not-attachable' => 'Die ausgewählte Datei ist nicht verfügbar.',
