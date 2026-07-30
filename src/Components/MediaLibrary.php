@@ -25,11 +25,12 @@ final class MediaLibrary extends ContainerComponent
 
     public bool $signed = false;
 
-    public static function make(?string $key = 'media-library'): static
+    public static function make(string $key = 'media-library'): static
     {
         $library = new self($key);
         $library->maxSize = (int) config('media.max_size');
         $library->signed = (bool) config('media.signed_uploads');
+        $library->accept = UploadMediaAction::field()->accept;
 
         return $library->schema([
             Table::use(MediaTable::class),

@@ -33,8 +33,8 @@ final class Media extends Model
     protected static function booted(): void
     {
         self::deleted(function (Media $media): void {
-            Storage::disk($media->disk)->delete($media->path);
             $media->attachments()->delete();
+            Storage::disk($media->disk)->delete($media->path);
         });
     }
 

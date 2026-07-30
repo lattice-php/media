@@ -33,16 +33,16 @@ export type MediaRow = {
 
 export type PickMode = { multiple: boolean; onConfirm: (items: MediaRow[]) => void };
 
+function actionNode(node: Node, key: string): Node<"action"> | undefined {
+  return node.schema?.find((child) => child.key === key) as Node<"action"> | undefined;
+}
+
 /**
  * The grid face of the media table: it drives the same `useTable` state the
  * core table component does, so search, filters, infinite paging and the
  * `reload-component` effect all behave identically — only the presentation and
  * the selection affordances differ.
  */
-function actionNode(node: Node, key: string): Node<"action"> | undefined {
-  return node.schema?.find((child) => child.key === key) as Node<"action"> | undefined;
-}
-
 export function LibraryView({ node, pick }: { node: Node; pick?: PickMode }) {
   const { t } = useT("media");
   const props = (node.props ?? {}) as Node<"media.library">["props"];
@@ -178,7 +178,9 @@ export function LibraryView({ node, pick }: { node: Node; pick?: PickMode }) {
 
       {rows.length === 0 && table.hasLoaded ? (
         <p className="py-12 text-center text-sm text-lt-muted-fg" data-test="media-empty">
-          {t("media.library.empty", "No media yet. Drop files anywhere to upload.")}
+          {table.search !== "" || Object.keys(table.tableFilters).length > 0
+            ? t("media.library.no-results", "No media matches your search.")
+            : t("media.library.empty", "No media yet. Drop files anywhere to upload.")}
         </p>
       ) : (
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">

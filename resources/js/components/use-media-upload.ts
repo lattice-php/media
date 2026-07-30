@@ -47,8 +47,13 @@ function transfer({ url, method, body, headers, onProgress }: Transfer): Promise
         onProgress(Math.round((event.loaded / event.total) * 100));
       }
     };
-    request.onload = () =>
-      resolve(new Response(request.responseText || null, { status: request.status }));
+    request.onload = () => {
+      try {
+        resolve(new Response(request.responseText || null, { status: request.status || 500 }));
+      } catch {
+        reject(new Error(`Upload to ${url} returned an unusable response`));
+      }
+    };
     request.onerror = () => reject(new Error(`Upload to ${url} failed`));
     request.send(body);
   });

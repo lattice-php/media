@@ -13,7 +13,7 @@ use Lattice\Media\Models\Media;
 use Lattice\Media\Rules\AttachableMedia;
 
 #[AsField(type: 'media-picker')]
-final class MediaPicker extends Field
+class MediaPicker extends Field
 {
     use HasChildSchema;
 

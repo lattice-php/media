@@ -63,6 +63,15 @@ final class UploadMediaAction extends FormActionDefinition
             $field->signedUpload();
         }
 
+        $acceptedTypes = array_values(array_filter(array_map(
+            strval(...),
+            (array) config('media.accepted_types', []),
+        )));
+
+        if ($acceptedTypes !== []) {
+            $field->acceptedFileTypes($acceptedTypes);
+        }
+
         return $field;
     }
 

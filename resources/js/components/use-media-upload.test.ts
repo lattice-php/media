@@ -147,6 +147,23 @@ describe("useMediaUpload", () => {
     });
   });
 
+  it("marks the batch as failed when the transport reports no status", async () => {
+    const { result } = renderUpload();
+
+    act(() => result.current.addFiles([file("alpha.jpg")]));
+
+    await waitFor(() => expect(FakeRequest.instances).toHaveLength(1));
+    await act(async () => {
+      FakeRequest.instances[0].finish(0, "");
+    });
+
+    await waitFor(() => {
+      expect(result.current.uploads).toEqual([
+        expect.objectContaining({ name: "alpha.jpg", status: "error" }),
+      ]);
+    });
+  });
+
   it("marks the batch as failed when the request never reaches the server", async () => {
     const { result } = renderUpload();
 

@@ -14,7 +14,7 @@ const MediaPickerComponent: RendererComponent<"field.media-picker"> = ({ node })
   const props = node.props;
   const [open, setOpen] = useState(false);
   const [picked, setPicked] = useState<Picked[]>(props.selected ?? []);
-  const libraryNode = node.schema?.[0];
+  const libraryNode = node.schema?.find((child) => child.type === "media.library");
   const multiple = props.multiple;
 
   return (
