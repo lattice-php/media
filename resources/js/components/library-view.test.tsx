@@ -37,4 +37,36 @@ describe("LibraryView", () => {
     fireEvent.click(card);
     expect(screen.getByTestId("media-pick-confirm")).toBeDisabled();
   });
+
+  it("shows a selection counter once a max is configured", () => {
+    render(
+      <LibraryView node={libraryNode()} pick={{ multiple: true, max: 2, onConfirm: vi.fn() }} />,
+    );
+
+    expect(screen.getByTestId("media-pick-counter")).toHaveTextContent("0/2");
+
+    fireEvent.click(screen.getAllByTestId("media-card")[0]);
+
+    expect(screen.getByTestId("media-pick-counter")).toHaveTextContent("1/2");
+  });
+
+  it("refuses to select past the max but always allows deselecting", () => {
+    render(
+      <LibraryView node={libraryNode()} pick={{ multiple: true, max: 1, onConfirm: vi.fn() }} />,
+    );
+
+    const [first, second] = screen.getAllByTestId("media-card");
+
+    fireEvent.click(first);
+    expect(screen.getByTestId("media-pick-confirm")).toBeEnabled();
+
+    fireEvent.click(second);
+    expect(screen.getByTestId("media-pick-counter")).toHaveTextContent("1/1");
+
+    fireEvent.click(first);
+    expect(screen.getByTestId("media-pick-confirm")).toBeDisabled();
+
+    fireEvent.click(second);
+    expect(screen.getByTestId("media-pick-counter")).toHaveTextContent("1/1");
+  });
 });

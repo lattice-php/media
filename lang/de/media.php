@@ -20,6 +20,7 @@ return [
         'heading' => 'Medien auswählen',
         'open' => 'Aus Mediathek wählen',
         'remove' => ':name entfernen',
+        'selected-of-max' => ':count/:max ausgewählt',
     ],
     'validation' => [
         'not-attachable' => 'Die ausgewählte Datei ist nicht verfügbar.',

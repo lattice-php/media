@@ -42,6 +42,31 @@ test('the media library composes its table and action nodes', function (): void 
     expect($keys)->toContain('media-upload', 'media-update', 'media-delete');
 });
 
+test('pick mode composes only the table and the upload action', function (): void {
+    $node = wire(MediaLibrary::make()->picker());
+
+    expect($node['props']['picker'])->toBeTrue()
+        ->and($node['schema'])->toHaveCount(2);
+
+    $types = array_column($node['schema'], 'type');
+    expect($types[0])->toBe('table');
+
+    $keys = array_map(fn (array $child): ?string => $child['key'] ?? null, array_slice($node['schema'], 1));
+    expect($keys)->toBe(['media-upload']);
+});
+
+test('switching to pick mode after a render recomposes the children', function (): void {
+    $library = MediaLibrary::make();
+    wire($library);
+
+    $node = wire($library->picker());
+
+    expect($node['schema'])->toHaveCount(2);
+
+    $keys = array_map(fn (array $child): ?string => $child['key'] ?? null, array_slice($node['schema'], 1));
+    expect($keys)->toBe(['media-upload']);
+});
+
 test('the library offers the configured accepted types to the file picker', function (): void {
     config()->set('media.accepted_types', ['image/*', 'application/pdf']);
 

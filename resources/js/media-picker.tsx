@@ -16,6 +16,9 @@ const MediaPickerComponent: RendererComponent<"field.media-picker"> = ({ node })
   const [picked, setPicked] = useState<Picked[]>(props.selected ?? []);
   const libraryNode = node.schema?.find((child) => child.type === "media.library");
   const multiple = props.multiple;
+  const maxFiles = props.maxFiles;
+  const remaining =
+    multiple && maxFiles !== null ? Math.max(0, maxFiles - picked.length) : undefined;
 
   return (
     <SimpleField label={props.label ?? ""} node={node}>
@@ -87,16 +90,19 @@ const MediaPickerComponent: RendererComponent<"field.media-picker"> = ({ node })
                     node={libraryNode}
                     pick={{
                       multiple,
+                      max: remaining,
                       onConfirm: (items: MediaRow[]) => {
+                        const merged = multiple
+                          ? [
+                              ...picked.filter(
+                                (entry) => !items.some((item) => item.id === entry.id),
+                              ),
+                              ...items,
+                            ]
+                          : items.slice(0, 1);
+
                         apply(
-                          multiple
-                            ? [
-                                ...picked.filter(
-                                  (entry) => !items.some((item) => item.id === entry.id),
-                                ),
-                                ...items,
-                              ]
-                            : items.slice(0, 1),
+                          multiple && maxFiles !== null ? merged.slice(0, maxFiles) : merged,
                         );
                         setOpen(false);
                       },

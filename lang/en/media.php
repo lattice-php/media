@@ -20,6 +20,7 @@ return [
         'heading' => 'Choose media',
         'open' => 'Choose from library',
         'remove' => 'Remove :name',
+        'selected-of-max' => ':count/:max selected',
     ],
     'validation' => [
         'not-attachable' => 'The selected file is not available.',

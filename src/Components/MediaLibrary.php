@@ -36,7 +36,7 @@ final class MediaLibrary extends ContainerComponent
     {
         $this->picker = $picker;
 
-        return $this;
+        return $this->schema([]);
     }
 
     public function accept(string $accept): static
@@ -72,12 +72,17 @@ final class MediaLibrary extends ContainerComponent
     protected function resolvedChildren(): array
     {
         if ($this->children === []) {
-            $this->schema([
+            $children = [
                 Table::use(MediaTable::class),
                 Action::use(UploadMediaAction::class, $this->uploadContext())->key('media-upload'),
-                Action::use(UpdateMediaAction::class)->key('media-update'),
-                Action::use(DeleteMediaAction::class)->key('media-delete'),
-            ]);
+            ];
+
+            if (! $this->picker) {
+                $children[] = Action::use(UpdateMediaAction::class)->key('media-update');
+                $children[] = Action::use(DeleteMediaAction::class)->key('media-delete');
+            }
+
+            $this->schema($children);
         }
 
         return parent::resolvedChildren();

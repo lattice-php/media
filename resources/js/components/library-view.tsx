@@ -31,7 +31,7 @@ export type MediaRow = {
   attachments_count: number;
 };
 
-export type PickMode = { multiple: boolean; onConfirm: (items: MediaRow[]) => void };
+export type PickMode = { multiple: boolean; max?: number; onConfirm: (items: MediaRow[]) => void };
 
 function actionNode(node: Node, key: string): Node<"action"> | undefined {
   return node.schema?.find((child) => child.key === key) as Node<"action"> | undefined;
@@ -81,6 +81,10 @@ export function LibraryView({ node, pick }: { node: Node; pick?: PickMode }) {
       if (wasSelected) {
         return;
       }
+    }
+
+    if (pick?.max !== undefined && !wasSelected && selection.selectedKeys.length >= pick.max) {
+      return;
     }
 
     selection.toggle(key);
@@ -224,7 +228,21 @@ export function LibraryView({ node, pick }: { node: Node; pick?: PickMode }) {
       <div ref={table.infiniteLoaderRef} />
 
       {pick ? (
-        <div className="flex justify-end border-t border-lt-border pt-3">
+        <div className="flex items-center justify-end gap-3 border-t border-lt-border pt-3">
+          {pick.max !== undefined && (
+            <span
+              className={cn(
+                "text-sm text-lt-muted-fg",
+                selection.selectedKeys.length >= pick.max && "text-lt-danger",
+              )}
+              data-test="media-pick-counter"
+            >
+              {t("media.picker.selected-of-max", "{{count}}/{{max}} selected", {
+                count: selection.selectedKeys.length,
+                max: pick.max,
+              })}
+            </span>
+          )}
           <Button
             data-test="media-pick-confirm"
             disabled={!selection.active}
