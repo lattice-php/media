@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { runAction } from "@lattice-php/lattice/action/lib/run-action";
-import { apiFetch, xsrfToken } from "@lattice-php/lattice/core/api";
+import { apiFetch } from "@lattice-php/lattice/core/api";
 import { withHeaders } from "@lattice-php/lattice/core/headers";
 import { useEffectDispatcher } from "@lattice-php/lattice/effects/use-effect-dispatcher";
 import type { SignedUpload } from "@lattice-php/lattice/types/generated";
@@ -30,6 +30,13 @@ type Transfer = {
   headers: Record<string, unknown>;
   onProgress: (percent: number) => void;
 };
+
+/** Core adds this header inside apiFetch, but the XHR path below builds its own. */
+function xsrfToken(): string {
+  const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+
+  return match ? decodeURIComponent(match[1]) : "";
+}
 
 /**
  * XHR rather than fetch because only XHR reports upload progress. Resolving a

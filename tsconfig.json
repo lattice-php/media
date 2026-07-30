@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "baseUrl": ".",
+    // The published core's exports map only lists barrel entries; this package
+    // imports the per-module files the preserveModules build emits, so map the
+    // deep specifiers straight onto dist/ instead.
+    "paths": {
+      "@lattice-php/lattice/*": ["./node_modules/@lattice-php/lattice/dist/*"]
+    }
+  },
+  "include": ["resources/js"]
+}

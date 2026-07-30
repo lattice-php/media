@@ -4,10 +4,7 @@ import { useMediaUpload } from "./use-media-upload";
 
 const apiFetch = vi.hoisted(() => vi.fn<() => Promise<Response>>());
 
-vi.mock("@lattice-php/lattice/core/api", () => ({
-  apiFetch,
-  xsrfToken: () => "csrf-token",
-}));
+vi.mock("@lattice-php/lattice/core/api", () => ({ apiFetch }));
 
 const reloadEffects = JSON.stringify({
   effects: [{ type: "reload-component", props: { component: "media.library" } }],
@@ -76,6 +73,7 @@ function renderUpload(signed = false) {
 
 describe("useMediaUpload", () => {
   beforeEach(() => {
+    document.cookie = "XSRF-TOKEN=csrf-token";
     apiFetch.mockReset();
     FakeRequest.instances = [];
     vi.stubGlobal("XMLHttpRequest", FakeRequest);

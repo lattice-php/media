@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { Schema } from "@lattice-php/lattice/core/types";
-import { fakeNode } from "@lattice-php/lattice/test-support";
+import { fakeNode } from "../test-support";
 import { LibraryView } from "./library-view";
 
 function row(id: number) {

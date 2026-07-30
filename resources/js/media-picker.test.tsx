@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { FormProvider } from "@lattice-php/lattice/form/hooks/context";
 import { FormValuesProvider } from "@lattice-php/lattice/form/hooks/values";
-import { fakeFormContext, fakeNode } from "@lattice-php/lattice/test-support";
+import { fakeFormContext, fakeNode } from "./test-support";
 import MediaPickerComponent from "./media-picker";
 
 function renderPicker(props: Record<string, unknown> = {}) {
