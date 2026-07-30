@@ -60,6 +60,53 @@ test('signed temp keys are finalized out of the temp prefix', function (): void 
         ->and(Storage::disk('public')->exists('tmp/abc123.jpg'))->toBeFalse();
 });
 
+test('a sealed context overrides the configured signed flag and disk', function (): void {
+    config()->set('media.signed_uploads', false);
+    Storage::fake('uploads');
+    Storage::disk('uploads')->put('tmp/abc123.jpg', 'bytes');
+
+    $this->callAction(
+        UploadMediaAction::class,
+        ['files' => ['tmp/abc123.jpg']],
+        ['signed' => true, 'disk' => 'uploads'],
+    )->assertOk();
+
+    $media = Media::query()->sole();
+
+    expect($media->disk)->toBe('uploads')
+        ->and($media->path)->toStartWith('media/')
+        ->and(Storage::disk('uploads')->exists($media->path))->toBeTrue()
+        ->and(Storage::disk('uploads')->exists('tmp/abc123.jpg'))->toBeFalse();
+});
+
+test('multipart uploads land on the context disk', function (): void {
+    Storage::fake('uploads');
+
+    $this->callAction(
+        UploadMediaAction::class,
+        ['files' => [UploadedFile::fake()->image('team.jpg')]],
+        ['disk' => 'uploads'],
+    )->assertOk();
+
+    $media = Media::query()->sole();
+
+    expect($media->disk)->toBe('uploads')
+        ->and(Storage::disk('uploads')->exists($media->path))->toBeTrue()
+        ->and(Storage::disk('public')->exists($media->path))->toBeFalse();
+});
+
+test('context accepted types override the configured ones', function (): void {
+    config()->set('media.accepted_types', ['application/pdf']);
+
+    $this->callAction(
+        UploadMediaAction::class,
+        ['files' => [UploadedFile::fake()->image('team.jpg')]],
+        ['accepted_types' => ['image/*']],
+    )->assertOk();
+
+    expect(Media::query()->sole()->mime_type)->toBe('image/jpeg');
+});
+
 test('signed uploads fall back to the default mime type when the disk cannot resolve it', function (): void {
     config()->set('media.signed_uploads', true);
     $realDisk = Storage::disk('public');

@@ -35,7 +35,7 @@ final class UploadMediaAction extends FormActionDefinition
 
     public function formSchema(Form $form, Request $request): Form
     {
-        return $form->schema([self::field()]);
+        return $form->schema([$this->field()]);
     }
 
     public function handle(Request $request): ActionResult
@@ -52,20 +52,24 @@ final class UploadMediaAction extends FormActionDefinition
             ->reloadComponent('media.library');
     }
 
-    public static function field(): FileUpload
+    /**
+     * The upload field for this instance: the sealed context wins over the
+     * package config, so a MediaLibrary can configure its own upload.
+     */
+    public function field(): FileUpload
     {
         $field = FileUpload::make('files', __('media::media.actions.upload.label'))
             ->multiple()
             ->maxSize((int) config('media.max_size'))
-            ->disk((string) config('media.disk'));
+            ->disk($this->contextStringOrNull('disk') ?? (string) config('media.disk'));
 
-        if ((bool) config('media.signed_uploads')) {
+        if ((bool) ($this->context('signed') ?? config('media.signed_uploads'))) {
             $field->signedUpload();
         }
 
         $acceptedTypes = array_values(array_filter(array_map(
             strval(...),
-            (array) config('media.accepted_types', []),
+            (array) ($this->context('accepted_types') ?? config('media.accepted_types', [])),
         )));
 
         if ($acceptedTypes !== []) {
@@ -81,7 +85,7 @@ final class UploadMediaAction extends FormActionDefinition
     private function storeUploads(mixed $value): array
     {
         $values = is_array($value) ? $value : [$value];
-        $field = self::field();
+        $field = $this->field();
         $stored = [];
 
         $uploadedFiles = array_values(array_filter($values, fn (mixed $item): bool => $item instanceof UploadedFile));

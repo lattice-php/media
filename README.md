@@ -59,6 +59,12 @@ Validate submitted ids with `Lattice\Media\Rules\AttachableMedia`.
 accepted mime patterns (`media.accepted_types`, `image/*` wildcards included, empty accepts
 everything), and whether uploads go through signed URLs (`media.signed_uploads`).
 
+A single library overrides the config defaults per instance:
+
+```php
+MediaLibrary::make()->signedUpload()->disk('s3')->accept('image/*');
+```
+
 ## Translations
 
 The components' strings ship with inline English defaults. With
