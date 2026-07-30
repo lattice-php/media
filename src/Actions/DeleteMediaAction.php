@@ -31,15 +31,20 @@ final class DeleteMediaAction extends ActionDefinition
             return Gate::allows('viewAny', Media::class);
         }
 
-        return Gate::allows('delete', Media::query()->findOrFail($request->integer('media_id')));
+        return Gate::allows('delete', $this->media($request));
     }
 
     public function handle(Request $request): ActionResult
     {
-        Media::query()->findOrFail($request->integer('media_id'))->delete();
+        $this->media($request)->delete();
 
         return ActionResult::success()
             ->toast(__('media::media.actions.delete.toast'), Variant::Success)
             ->reloadComponent('media.library');
+    }
+
+    private function media(Request $request): Media
+    {
+        return Media::query()->findOrFail($request->integer('media_id'));
     }
 }

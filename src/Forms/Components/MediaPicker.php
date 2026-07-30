@@ -34,14 +34,13 @@ class MediaPicker extends Field
         $field = parent::make($name, $label);
 
         return $field->schema([
-            MediaLibrary::make($name.'-library')->picker()->multiple(false),
+            MediaLibrary::make($name.'-library')->picker(),
         ]);
     }
 
     public function multiple(bool $multiple = true): static
     {
         $this->multiple = $multiple;
-        $this->library()->multiple($multiple);
 
         return $this;
     }
@@ -98,13 +97,5 @@ class MediaPicker extends Field
         }
 
         return ["{$this->name()}.*" => ['integer', new AttachableMedia]];
-    }
-
-    private function library(): MediaLibrary
-    {
-        $library = $this->resolvedChildren()[0] ?? null;
-        assert($library instanceof MediaLibrary);
-
-        return $library;
     }
 }

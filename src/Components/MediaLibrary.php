@@ -17,18 +17,13 @@ final class MediaLibrary extends ContainerComponent
 {
     public bool $picker = false;
 
-    public bool $multiple = true;
-
     public ?string $accept = null;
-
-    public ?int $maxSize = null;
 
     public bool $signed = false;
 
     public static function make(string $key = 'media-library'): static
     {
         $library = new self($key);
-        $library->maxSize = (int) config('media.max_size');
         $library->signed = (bool) config('media.signed_uploads');
         $library->accept = UploadMediaAction::field()->accept;
 
@@ -43,13 +38,6 @@ final class MediaLibrary extends ContainerComponent
     public function picker(bool $picker = true): static
     {
         $this->picker = $picker;
-
-        return $this;
-    }
-
-    public function multiple(bool $multiple = true): static
-    {
-        $this->multiple = $multiple;
 
         return $this;
     }

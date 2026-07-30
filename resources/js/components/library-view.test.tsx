@@ -20,7 +20,7 @@ function row(id: number) {
 function libraryNode() {
   return fakeNode({
     type: "media.library",
-    props: { picker: true, multiple: false, accept: null, maxSize: null, signed: false },
+    props: { picker: true, accept: null, signed: false },
     schema: [{ type: "table", props: { columns: [], data: [row(1), row(2)] } }] as Schema,
   });
 }

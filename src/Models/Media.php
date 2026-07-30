@@ -18,7 +18,6 @@ use Throwable;
  * @property int $size
  * @property string|null $alt
  * @property int|null $uploaded_by
- * @property-read string|null $url
  */
 final class Media extends Model
 {
@@ -65,11 +64,6 @@ final class Media extends Model
     public function isImage(): bool
     {
         return str_starts_with($this->mime_type, 'image/');
-    }
-
-    protected function getUrlAttribute(): ?string
-    {
-        return $this->url();
     }
 
     /**
