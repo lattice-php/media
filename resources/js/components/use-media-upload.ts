@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { runAction } from "@lattice-php/lattice/action/lib/run-action";
-import { apiFetch } from "@lattice-php/lattice/core/api";
+import { apiFetch, xsrfToken } from "@lattice-php/lattice/core/api";
 import { withHeaders } from "@lattice-php/lattice/core/headers";
+import { requestSignedUpload, xhrTransfer } from "@lattice-php/lattice/core/upload";
 import { useEffectDispatcher } from "@lattice-php/lattice/effects/use-effect-dispatcher";
 import type { SignedUpload } from "@lattice-php/lattice/types/generated";
 
@@ -22,49 +23,6 @@ export type MediaUpload = {
   uploads: UploadItem[];
   addFiles: (files: FileList | File[] | null) => void;
 };
-
-type Transfer = {
-  url: string;
-  method: string;
-  body: FormData | File;
-  headers: Record<string, unknown>;
-  onProgress: (percent: number) => void;
-};
-
-/** Core adds this header inside apiFetch, but the XHR path below builds its own. */
-function xsrfToken(): string {
-  const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
-
-  return match ? decodeURIComponent(match[1]) : "";
-}
-
-/**
- * XHR rather than fetch because only XHR reports upload progress. Resolving a
- * Response keeps runAction — and with it the shared effect dispatch and error
- * policy — usable for both upload flows.
- */
-function transfer({ url, method, body, headers, onProgress }: Transfer): Promise<Response> {
-  return new Promise((resolve, reject) => {
-    const request = new XMLHttpRequest();
-
-    request.open(method, url, true);
-    Object.entries(headers).forEach(([key, value]) => request.setRequestHeader(key, String(value)));
-    request.upload.onprogress = (event) => {
-      if (event.lengthComputable) {
-        onProgress(Math.round((event.loaded / event.total) * 100));
-      }
-    };
-    request.onload = () => {
-      try {
-        resolve(new Response(request.responseText || null, { status: request.status || 500 }));
-      } catch {
-        reject(new Error(`Upload to ${url} returned an unusable response`));
-      }
-    };
-    request.onerror = () => reject(new Error(`Upload to ${url} failed`));
-    request.send(body);
-  });
-}
 
 /**
  * Drives the media library's uploads. A settled item leaves the list — the
@@ -98,7 +56,7 @@ export function useMediaUpload({ endpoint, ref, signed }: UploadTarget): MediaUp
 
     const ok = await runAction(
       () =>
-        transfer({
+        xhrTransfer({
           url: endpoint,
           method: "POST",
           body,
@@ -116,16 +74,11 @@ export function useMediaUpload({ endpoint, ref, signed }: UploadTarget): MediaUp
   }
 
   async function signAndPut(item: UploadItem, file: File): Promise<string | null> {
-    const signature = await apiFetch(endpoint, {
-      method: "POST",
+    const signature = await requestSignedUpload(endpoint, {
       ref,
-      body: JSON.stringify({
-        _sub: "upload",
-        _target: "files",
-        filename: file.name,
-        contentType: file.type,
-      }),
-      throwOnError: false,
+      target: "files",
+      filename: file.name,
+      contentType: file.type,
     });
 
     if (!signature.ok) {
@@ -137,7 +90,7 @@ export function useMediaUpload({ endpoint, ref, signed }: UploadTarget): MediaUp
     const sign = (await signature.json()) as SignedUpload;
 
     try {
-      const put = await transfer({
+      const put = await xhrTransfer({
         url: sign.url,
         method: sign.method.toUpperCase(),
         body: file,

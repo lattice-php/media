@@ -4,7 +4,10 @@ import { useMediaUpload } from "./use-media-upload";
 
 const apiFetch = vi.hoisted(() => vi.fn<() => Promise<Response>>());
 
-vi.mock("@lattice-php/lattice/core/api", () => ({ apiFetch }));
+vi.mock("@lattice-php/lattice/core/api", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@lattice-php/lattice/core/api")>()),
+  apiFetch,
+}));
 
 const reloadEffects = JSON.stringify({
   effects: [{ type: "reload-component", props: { component: "media.library" } }],
