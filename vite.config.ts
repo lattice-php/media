@@ -5,12 +5,9 @@ import react from "@vitejs/plugin-react";
 import laravel from "laravel-vite-plugin";
 import { defineConfig } from "vite";
 
-import { latticeDeepImports } from "./vite.lattice-deep-imports";
-
 // Builds the workbench demo app. Assets land in the Testbench skeleton's
 // public dir — the manifest `php artisan serve` and the browser suite read.
 export default defineConfig({
-  resolve: { alias: latticeDeepImports },
   plugins: [
     // dts off: the generated icon-name module would land in the package's own
     // resources/js, which ships as source to consumers.
