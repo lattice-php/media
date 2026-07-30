@@ -9,7 +9,10 @@ return [
         'search' => 'Search media',
         'select' => 'Select :name',
         'selected' => ':count selected',
+        'upload-dismiss' => 'Dismiss :name',
         'upload-failed' => 'Upload failed',
+        'upload-retry' => 'Retry :name',
+        'uploaded' => ':count file(s) uploaded',
     ],
     'detail' => [
         'download' => 'Download',

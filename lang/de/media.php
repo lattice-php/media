@@ -9,7 +9,10 @@ return [
         'search' => 'Medien suchen',
         'select' => ':name auswählen',
         'selected' => ':count ausgewählt',
+        'upload-dismiss' => ':name ausblenden',
         'upload-failed' => 'Upload fehlgeschlagen',
+        'upload-retry' => ':name erneut versuchen',
+        'uploaded' => ':count Datei(en) hochgeladen',
     ],
     'detail' => [
         'download' => 'Herunterladen',

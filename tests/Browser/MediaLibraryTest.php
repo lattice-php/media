@@ -28,9 +28,10 @@ it('uploads a file through the dropzone input', function (): void {
 
     // The plugin's in-process server drops uploaded files (LaravelHttpServer
     // builds the kernel request with an empty files array), so the action stores
-    // nothing and its toast counts zero — UploadMediaActionTest covers the
-    // server-side store. Reaching the toast proves the client transport ran.
-    assertSeeEventually($page, '0 file(s) uploaded');
+    // nothing — UploadMediaActionTest covers the server-side store. The toast is
+    // client-side and counts accepted requests, so reaching it with one file
+    // proves the client transport ran.
+    assertSeeEventually($page, '1 file(s) uploaded');
 
     $page->assertNoSmoke();
 });
