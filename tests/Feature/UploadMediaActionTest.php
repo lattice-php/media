@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Lattice\Lattice\Facades\Lattice;
 use Lattice\Media\Actions\UploadMediaAction;
@@ -131,6 +132,54 @@ test('signed uploads fall back to the default mime type when the disk cannot res
     expect($media->mime_type)->toBe('application/octet-stream')
         ->and($realDisk->exists($media->path))->toBeTrue();
 });
+
+test('signs, uploads, and finalizes a key against rustfs end-to-end', function (): void {
+    if (! rustfsIsReachable()) {
+        $this->markTestSkipped('RustFS/S3 is not reachable.');
+    }
+
+    $context = ['signed' => true, 'disk' => 's3'];
+    $tempKey = null;
+    $finalPath = null;
+
+    try {
+        $signed = $this->callAction(UploadMediaAction::class, [
+            '_sub' => 'upload',
+            '_target' => 'files',
+            'filename' => 'invoice.pdf',
+            'contentType' => 'application/pdf',
+        ], $context)->assertOk()->json();
+
+        expect($signed['method'])->toBe('put')
+            ->and($signed['key'])->toStartWith('tmp/');
+
+        $tempKey = $signed['key'];
+
+        $put = Http::withHeaders($signed['headers'])->send('PUT', $signed['url'], ['body' => 'hello rustfs']);
+
+        expect($put->successful())->toBeTrue()
+            ->and(Storage::disk('s3')->exists($tempKey))->toBeTrue();
+
+        $this->callAction(UploadMediaAction::class, ['files' => [$tempKey]], $context)->assertOk();
+
+        $media = Media::query()->sole();
+        $finalPath = $media->path;
+
+        expect($media->disk)->toBe('s3')
+            ->and($media->path)->not->toStartWith('tmp/')
+            ->and(Storage::disk('s3')->exists($media->path))->toBeTrue();
+    } finally {
+        if ($tempKey !== null) {
+            Storage::disk('s3')->delete($tempKey);
+        }
+
+        if ($finalPath !== null) {
+            Storage::disk('s3')->delete($finalPath);
+        }
+
+        Media::query()->where('disk', 's3')->delete();
+    }
+})->group('rustfs');
 
 test('guests cannot upload', function (): void {
     auth()->logout();

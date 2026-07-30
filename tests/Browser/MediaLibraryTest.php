@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Storage;
 use Lattice\Media\Models\Media;
 
 it('renders the media grid and narrows it through the search box', function (): void {
@@ -76,3 +77,37 @@ it('bulk deletes the selected media', function (): void {
 
     $page->assertNoSmoke();
 });
+
+it('uploads a file through the real signed flow against rustfs', function (): void {
+    if (! rustfsIsReachable()) {
+        $this->markTestSkipped('RustFS/S3 is not reachable.');
+    }
+
+    $media = null;
+
+    try {
+        $page = $this->visitAsWorkbenchUser('/media?signed=1')
+            ->assertPresent('@media-upload-input');
+
+        $page->attach('@media-upload-input', __DIR__.'/fixtures/avatar.jpg');
+
+        assertSeeEventually($page, '1 file(s) uploaded');
+
+        retryUntil(function () use (&$media): void {
+            $media = Media::query()->where('disk', 's3')->latest('id')->first();
+            expect($media)->not->toBeNull();
+        });
+
+        assertSeeEventually($page, $media->name);
+
+        expect($media->disk)->toBe('s3')
+            ->and(Storage::disk('s3')->exists($media->path))->toBeTrue();
+
+        $page->assertNoSmoke();
+    } finally {
+        if ($media !== null) {
+            Storage::disk('s3')->delete($media->path);
+            $media->delete();
+        }
+    }
+})->group('rustfs');

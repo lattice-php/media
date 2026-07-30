@@ -25,6 +25,23 @@ abstract class TestCase extends BaseTestCase
         $app['config']->set('database.default', 'sqlite');
         $app['config']->set('database.connections.sqlite.database', ':memory:');
 
+        // testbench.yaml's env list only reaches the CLI-booted workbench app
+        // (artisan/composer serve), not this ephemeral TestCase application —
+        // mirror the same local RustFS defaults here so `->group('rustfs')`
+        // tests resolve a working s3 disk.
+        $app['config']->set('filesystems.disks.s3', [
+            'driver' => 's3',
+            'key' => 'herd',
+            'secret' => 'secretkey',
+            'region' => 'us-east-1',
+            'bucket' => 'lattice',
+            'url' => 'https://rustfs.herd.test/lattice',
+            'endpoint' => 'https://rustfs.herd.test',
+            'use_path_style_endpoint' => true,
+            'throw' => false,
+            'report' => false,
+        ]);
+
         foreach (WorkbenchConfig::lattice() as $key => $value) {
             $app['config']->set($key, $value);
         }
