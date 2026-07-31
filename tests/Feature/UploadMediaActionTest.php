@@ -183,6 +183,54 @@ test('signs, uploads, and finalizes a key against rustfs end-to-end', function (
     }
 })->group('rustfs');
 
+test('a signed upload ends with a real derivative object on s3', function (): void {
+    if (! rustfsIsReachable()) {
+        $this->markTestSkipped('RustFS/S3 is not reachable.');
+    }
+
+    $context = ['signed' => true, 'disk' => 's3'];
+    $tempKey = null;
+    $media = null;
+
+    try {
+        $signed = $this->callAction(UploadMediaAction::class, [
+            '_sub' => 'upload',
+            '_target' => 'files',
+            'filename' => 'photo.jpg',
+            'contentType' => 'image/jpeg',
+        ], $context)->assertOk()->json();
+
+        $tempKey = $signed['key'];
+
+        $put = Http::withHeaders([...$signed['headers'], 'Content-Type' => 'image/jpeg'])->send('PUT', $signed['url'], [
+            'body' => (string) UploadedFile::fake()->image('photo.jpg', 900, 600)->getContent(),
+        ]);
+
+        expect($put->successful())->toBeTrue();
+
+        // The queue is sync here, so finalizing runs the conversion job inline.
+        $this->callAction(UploadMediaAction::class, ['files' => [$tempKey]], $context)->assertOk();
+
+        $media = Media::query()->sole();
+        $derivative = $media->conversionPath('thumb');
+
+        expect($media->mime_type)->toBe('image/jpeg')
+            ->and($derivative)->not->toBeNull()
+            ->and($derivative)->toEndWith('-thumb.webp')
+            ->and(Storage::disk('s3')->exists((string) $derivative))->toBeTrue()
+            ->and(Storage::disk('s3')->get((string) $derivative))->toStartWith('RIFF')
+            ->and($media->width)->toBe(900)
+            ->and($media->height)->toBe(600);
+    } finally {
+        if ($tempKey !== null) {
+            Storage::disk('s3')->delete($tempKey);
+        }
+
+        $media?->delete();
+        Media::query()->where('disk', 's3')->delete();
+    }
+})->group('rustfs');
+
 test('multipart uploads queue their conversions', function (): void {
     Bus::fake();
 

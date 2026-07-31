@@ -24,7 +24,7 @@ class MediaPicker extends Field
     /**
      * Existing attachments surfaced on edit as display descriptors.
      *
-     * @var list<array{id: int, name: string, url: string|null, mime_type: string}>|null
+     * @var list<array{id: int, name: string, url: string|null, preview_url: string|null, mime_type: string}>|null
      */
     public ?array $selected = null;
 
@@ -65,6 +65,7 @@ class MediaPicker extends Field
                 'id' => (int) $row->getKey(),
                 'name' => $row->name,
                 'url' => $row->url(),
+                'preview_url' => $row->previewUrl(),
                 'mime_type' => $row->mime_type,
             ])
             ->values()

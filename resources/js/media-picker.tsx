@@ -7,7 +7,13 @@ import { Dialog, DialogContent, DialogHeader } from "@lattice-php/lattice/ui/dia
 import { IconButton } from "@lattice-php/lattice/ui/icon-button";
 import { LibraryView, type MediaRow } from "./components/library-view";
 
-type Picked = { id: number; name: string; url: string | null; mime_type: string };
+type Picked = {
+  id: number;
+  name: string;
+  url: string | null;
+  preview_url: string | null;
+  mime_type: string;
+};
 
 const MediaPickerComponent: RendererComponent<"field.media-picker"> = ({ node }) => {
   const { t } = useT("media");
@@ -47,8 +53,12 @@ const MediaPickerComponent: RendererComponent<"field.media-picker"> = ({ node })
                     data-test="media-picker-item"
                     key={item.id}
                   >
-                    {item.url !== null && item.mime_type.startsWith("image/") && (
-                      <img alt="" className="size-8 rounded-lt-xs object-cover" src={item.url} />
+                    {item.preview_url !== null && item.mime_type.startsWith("image/") && (
+                      <img
+                        alt=""
+                        className="size-8 rounded-lt-xs object-cover"
+                        src={item.preview_url}
+                      />
                     )}
                     <span className="truncate text-lt-fg">{item.name}</span>
                     {!locked && (

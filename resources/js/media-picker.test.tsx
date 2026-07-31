@@ -10,6 +10,7 @@ function libraryRow(id: number, name: string) {
   return {
     id,
     url: null,
+    preview_url: null,
     name,
     mime_type: "image/jpeg",
     size: 100,
@@ -37,7 +38,7 @@ function renderPicker(props: Record<string, unknown> = {}, schema?: Schema) {
       label: "Cover",
       multiple: false,
       maxFiles: null,
-      selected: [{ id: 7, name: "cover.jpg", url: null, mime_type: "image/jpeg" }],
+      selected: [{ id: 7, name: "cover.jpg", url: null, preview_url: null, mime_type: "image/jpeg" }],
       ...props,
     },
     schema,
@@ -73,8 +74,8 @@ describe("MediaPickerComponent", () => {
     const { container } = renderPicker({
       multiple: true,
       selected: [
-        { id: 7, name: "a.jpg", url: null, mime_type: "image/jpeg" },
-        { id: 9, name: "b.jpg", url: null, mime_type: "image/jpeg" },
+        { id: 7, name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg" },
+        { id: 9, name: "b.jpg", url: null, preview_url: null, mime_type: "image/jpeg" },
       ],
     });
 
@@ -93,7 +94,7 @@ describe("MediaPickerComponent", () => {
       {
         multiple: true,
         maxFiles: 2,
-        selected: [{ id: 1, name: "a.jpg", url: null, mime_type: "image/jpeg" }],
+        selected: [{ id: 1, name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg" }],
       },
       librarySchema([libraryRow(10, "d.jpg"), libraryRow(11, "e.jpg")]),
     );

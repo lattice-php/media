@@ -90,12 +90,14 @@ export function DetailPanel({
       >
         <DialogHeader closeLabel={translate("lattice", "common.close", "Close")} title={row.name} />
 
-        {row.url !== null && row.mime_type.startsWith("image/") ? (
+        {row.preview_url !== null && row.mime_type.startsWith("image/") ? (
+          // A fixed box, not max-h: the derivative's height is unknown until it
+          // loads, and a growing preview shifts the metadata below it.
           <PreviewableImage
             alt={row.alt ?? row.name}
-            className="max-h-64 w-full rounded-lt-sm object-contain"
+            className="h-64 w-full rounded-lt-sm object-contain"
             previewable
-            src={row.url}
+            src={row.preview_url}
             testId="media-detail-preview"
           />
         ) : (

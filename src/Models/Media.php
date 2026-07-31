@@ -110,6 +110,12 @@ class Media extends Model
         return $this->pathUrl($path ?? $this->path);
     }
 
+    /** The derivative every preview surface renders: grid cards, picker chips, the detail panel. */
+    public function previewUrl(): ?string
+    {
+        return $this->url((string) config('media.library_conversion', 'thumb'));
+    }
+
     public function conversionPath(string $name): ?string
     {
         return $this->generated_conversions[$name]['path'] ?? null;
@@ -148,6 +154,14 @@ class Media extends Model
     }
 
     /**
+     * @return list<string>
+     */
+    public static function convertibleMimeTypes(): array
+    {
+        return self::CONVERTIBLE_MIME_TYPES;
+    }
+
+    /**
      * @return array<string, mixed>
      */
     #[\Override]
@@ -156,7 +170,7 @@ class Media extends Model
         return [
             ...parent::toArray(),
             'url' => $this->url(),
-            'preview_url' => $this->url((string) config('media.library_conversion', 'thumb')),
+            'preview_url' => $this->previewUrl(),
         ];
     }
 

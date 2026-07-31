@@ -24,7 +24,15 @@ declare module "@lattice-php/lattice" {
       prefillResetOn: string[] | null;
       readOnly: boolean;
       required: boolean;
-      selected: { id: number; name: string; url: string | null; mime_type: string }[] | null;
+      selected:
+        | {
+            id: number;
+            name: string;
+            url: string | null;
+            preview_url: string | null;
+            mime_type: string;
+          }[]
+        | null;
       tooltip: string | null;
       value: unknown;
     };

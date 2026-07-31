@@ -30,6 +30,35 @@ test('the media table serializes rows with url, name and usage count', function 
         ->assertJsonPath('data.0.url', $media->url());
 });
 
+test('the row payload previews the generated derivative next to the original', function (): void {
+    $media = Media::factory()->create([
+        'path' => 'media/hero.jpg',
+        'generated_conversions' => ['thumb' => ['path' => 'media/conversions/hero-thumb.webp', 'width' => 400, 'height' => 400]],
+    ]);
+
+    $ref = $this->latticeRef(wire(Table::use(MediaTable::class)));
+
+    $row = getJson('/lattice/tables/media.library', ['X-Lattice-Ref' => $ref])
+        ->assertOk()
+        ->json('data.0');
+
+    expect($row['preview_url'])->toContain('hero-thumb.webp')
+        ->and($row['preview_url'])->toBe($media->url('thumb'))
+        ->and($row['url'])->toContain('media/hero.jpg');
+});
+
+test('the row payload falls back to the original preview while no conversion exists', function (): void {
+    Media::factory()->create(['path' => 'media/hero.jpg']);
+
+    $ref = $this->latticeRef(wire(Table::use(MediaTable::class)));
+
+    $row = getJson('/lattice/tables/media.library', ['X-Lattice-Ref' => $ref])
+        ->assertOk()
+        ->json('data.0');
+
+    expect($row['preview_url'])->toBe($row['url']);
+});
+
 test('search matches names and the type filter narrows by mime prefix', function (): void {
     Media::factory()->create(['name' => 'invoice.pdf', 'mime_type' => 'application/pdf']);
     Media::factory()->create(['name' => 'photo.jpg']);

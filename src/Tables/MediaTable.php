@@ -29,12 +29,17 @@ use Lattice\Media\Tables\Filters\MediaTypeFilter;
 final class MediaTable extends EloquentTableDefinition
 {
     /**
+     * A row reaches the client projected down to the keys its columns bind, and
+     * the grid needs the original next to the derivative (the detail slideout
+     * links it for download) — hence the hidden column.
+     *
      * @return array<int, Column>
      */
     public function columns(): array
     {
         return [
-            ImageColumn::make('url')->label(__('media::media.columns.preview'))->size(44),
+            ImageColumn::make('preview_url')->label(__('media::media.columns.preview'))->size(44),
+            TextColumn::make('url')->label(__('media::media.columns.original'))->toggleable(hiddenByDefault: true),
             TextColumn::make('name')->label(__('media::media.columns.name'))->searchable()->sortable(),
             TextColumn::make('mime_type')->label(__('media::media.columns.type')),
             NumberColumn::make('size')->label(__('media::media.columns.size'))->sortable(),
