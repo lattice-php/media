@@ -26,7 +26,7 @@ declare module "@lattice-php/lattice" {
       required: boolean;
       selected:
         | {
-            id: number;
+            id: string;
             name: string;
             url: string | null;
             preview_url: string | null;

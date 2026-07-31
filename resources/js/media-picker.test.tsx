@@ -30,7 +30,7 @@ function captionTemplate(): Schema {
   return [...librarySchema([]), { type: "field.text-input", props: { name: "caption", label: "Caption" } }] as Schema;
 }
 
-function libraryRow(id: number, name: string) {
+function libraryRow(id: string, name: string) {
   return {
     id,
     url: null,
@@ -62,7 +62,7 @@ function renderPicker(props: Record<string, unknown> = {}, schema?: Schema) {
       label: "Cover",
       multiple: false,
       maxFiles: null,
-      selected: [{ id: 7, name: "cover.jpg", url: null, preview_url: null, mime_type: "image/jpeg" }],
+      selected: [{ id: "7", name: "cover.jpg", url: null, preview_url: null, mime_type: "image/jpeg" }],
       ...props,
     },
     schema,
@@ -91,7 +91,7 @@ describe("MediaPickerComponent", () => {
     renderPicker({
       selected: [
         {
-          id: 7,
+          id: "7",
           name: "cover.jpg",
           url: "/storage/media/cover.jpg",
           preview_url: "/storage/media/conversions/cover-thumb.webp",
@@ -119,8 +119,8 @@ describe("MediaPickerComponent", () => {
     const { container } = renderPicker({
       multiple: true,
       selected: [
-        { id: 7, name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg" },
-        { id: 9, name: "b.jpg", url: null, preview_url: null, mime_type: "image/jpeg" },
+        { id: "7", name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg" },
+        { id: "9", name: "b.jpg", url: null, preview_url: null, mime_type: "image/jpeg" },
       ],
     });
 
@@ -139,9 +139,9 @@ describe("MediaPickerComponent", () => {
       {
         multiple: true,
         maxFiles: 2,
-        selected: [{ id: 1, name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg" }],
+        selected: [{ id: "1", name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg" }],
       },
-      librarySchema([libraryRow(10, "d.jpg"), libraryRow(11, "e.jpg")]),
+      librarySchema([libraryRow("10", "d.jpg"), libraryRow("11", "e.jpg")]),
     );
 
     fireEvent.click(screen.getByTestId("media-picker-open"));
@@ -158,8 +158,8 @@ describe("MediaPickerComponent", () => {
         name: "gallery",
         multiple: true,
         selected: [
-          { id: 7, name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: { caption: "Front" } },
-          { id: 9, name: "b.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: {} },
+          { id: "7", name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: { caption: "Front" } },
+          { id: "9", name: "b.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: {} },
         ],
       },
       captionTemplate(),
@@ -174,7 +174,7 @@ describe("MediaPickerComponent", () => {
       {
         name: "gallery",
         multiple: true,
-        selected: [{ id: 7, name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg" }],
+        selected: [{ id: "7", name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg" }],
       },
       librarySchema([]),
     );
@@ -188,8 +188,8 @@ describe("MediaPickerComponent", () => {
         name: "gallery",
         multiple: true,
         selected: [
-          { id: 7, name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: { caption: "Front" } },
-          { id: 9, name: "b.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: {} },
+          { id: "7", name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: { caption: "Front" } },
+          { id: "9", name: "b.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: {} },
         ],
       },
       captionTemplate(),
@@ -213,8 +213,8 @@ describe("MediaPickerComponent", () => {
         name: "gallery",
         multiple: true,
         selected: [
-          { id: 7, name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: { caption: "Front" } },
-          { id: 9, name: "b.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: { caption: "Back" } },
+          { id: "7", name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: { caption: "Front" } },
+          { id: "9", name: "b.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: { caption: "Back" } },
         ],
       },
       captionTemplate(),
@@ -232,7 +232,7 @@ describe("MediaPickerComponent", () => {
         name: "cover",
         multiple: false,
         selected: [
-          { id: 7, name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: { caption: "Front" } },
+          { id: "7", name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: { caption: "Front" } },
         ],
       },
       captionTemplate(),
@@ -249,7 +249,7 @@ describe("MediaPickerComponent", () => {
         multiple: true,
         readOnly: true,
         selected: [
-          { id: 7, name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: { caption: "Front" } },
+          { id: "7", name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: { caption: "Front" } },
         ],
       },
       captionTemplate(),
@@ -267,7 +267,7 @@ describe("MediaPickerComponent", () => {
         multiple: true,
         disabled: true,
         selected: [
-          { id: 7, name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: { caption: "Front" } },
+          { id: "7", name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: { caption: "Front" } },
         ],
       },
       captionTemplate(),

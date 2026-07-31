@@ -26,7 +26,7 @@ function uploadItem(overrides: Partial<UploadItem> = {}): UploadItem {
   };
 }
 
-function row(id: number) {
+function row(id: string) {
   return {
     id,
     url: null,
@@ -47,7 +47,7 @@ function libraryNode() {
     schema: [
       {
         type: "table",
-        props: { columns: [], data: [row(1), row(2)], endpoint: "/lattice/tables/media" },
+        props: { columns: [], data: [row("1"), row("2")], endpoint: "/lattice/tables/media" },
       },
       { type: "action", key: "media-update", props: { endpoint: "/update", ref: "ref-1" } },
       { type: "action", key: "media-delete", props: { endpoint: "/delete", ref: "ref-1" } },
@@ -165,7 +165,7 @@ describe("LibraryView", () => {
       schema: [
         {
           type: "table",
-          props: { columns: [], data: [row(1)], endpoint: "/lattice/tables/media" },
+          props: { columns: [], data: [row("1")], endpoint: "/lattice/tables/media" },
         },
       ] as Schema,
     });
