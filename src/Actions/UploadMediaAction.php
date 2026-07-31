@@ -19,6 +19,7 @@ use Lattice\Lattice\Ui\Enums\HttpMethod;
 use Lattice\Lattice\Ui\Enums\Variant;
 use Lattice\Media\Jobs\GenerateMediaConversions;
 use Lattice\Media\Models\Media;
+use RuntimeException;
 
 #[AsAction('media.upload')]
 final class UploadMediaAction extends FormActionDefinition
@@ -108,12 +109,25 @@ final class UploadMediaAction extends FormActionDefinition
     {
         $tenant = Media::tenantValue();
 
+        if ($tenant !== null) {
+            $tenant = (string) $tenant;
+
+            if (str_contains($tenant, '/') || str_contains($tenant, '\\') || str_contains($tenant, '..')) {
+                throw new RuntimeException("The tenant value [{$tenant}] must not contain path separators.");
+            }
+        }
+
         return 'media/'.($tenant === null ? '' : "{$tenant}/").Str::uuid()->toString();
     }
 
     private function extensionSuffix(string $extension): string
     {
         return $extension === '' ? '' : ".{$extension}";
+    }
+
+    private function signedUploadName(string $path): string
+    {
+        return basename(dirname($path)).$this->extensionSuffix(pathinfo($path, PATHINFO_EXTENSION));
     }
 
     /**
@@ -154,7 +168,7 @@ final class UploadMediaAction extends FormActionDefinition
                 $stored[] = Media::modelQuery()->create([
                     'disk' => $upload['disk'],
                     'path' => $upload['path'],
-                    'name' => $upload['name'],
+                    'name' => $this->signedUploadName($upload['path']),
                     'mime_type' => $upload['mime_type'] ?? 'application/octet-stream',
                     'size' => $upload['size'] ?? 0,
                     'uploaded_by' => auth()->id(),

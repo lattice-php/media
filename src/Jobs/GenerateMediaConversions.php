@@ -139,6 +139,10 @@ final class GenerateMediaConversions implements ShouldQueue
 
         $path = $this->derivativePath($name, $image->extension());
 
+        if ($path === $this->media->path) {
+            throw new RuntimeException("The [{$name}] media conversion would overwrite the original at [{$path}].");
+        }
+
         if ($image->storeAs($path, null, $this->media->disk) === false) {
             throw new RuntimeException("Storing the [{$name}] media conversion at [{$path}] failed.");
         }

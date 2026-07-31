@@ -51,7 +51,8 @@ $product->media('gallery');             // MorphToMany<Media>, ordered by the pi
 $product->firstMediaUrl('gallery');
 ```
 
-Validate submitted ids with `Lattice\Media\Rules\AttachableMedia`.
+Validate submitted ids with `Lattice\Media\Rules\AttachableMedia`; the HTTP path is guarded by this rule
+automatically, but a direct `syncMedia()` call from your own code must validate the ids itself.
 
 ## Conversions
 
@@ -105,6 +106,9 @@ so the first spec to run wins for that name. For the same reason a name that is 
 throws, and because the job resolves all the names before it generates anything, one bad name fails
 *every* conversion for that collection — including the ones that were fine — and burns all three
 attempts. Verify a new name in a queue worker's log before shipping it.
+
+The name `original` is reserved for the source file itself: a conversion may never overwrite it, and
+the job throws rather than silently clobber the upload.
 
 Nothing fingerprints a callback, so an edited one is not picked up on its own:
 

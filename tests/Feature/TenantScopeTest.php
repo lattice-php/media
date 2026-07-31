@@ -108,6 +108,23 @@ test('uploads store under a tenant-prefixed per-media directory and stamp the ro
         ->and(Storage::disk('public')->exists($media->path))->toBeTrue();
 });
 
+test('a tenant value containing path segments is rejected before anything is stored', function (): void {
+    Storage::fake('public');
+    Lattice::actions([UploadMediaAction::class]);
+    actingAs(workbenchTestUser());
+    Media::resolveTenantUsing(fn (): string => '../shared');
+    $this->withoutExceptionHandling();
+
+    expect(function (): void {
+        $this->callAction(UploadMediaAction::class, [
+            'files' => [UploadedFile::fake()->image('team.jpg', 100, 100)],
+        ]);
+    })->toThrow(RuntimeException::class);
+
+    expect(Media::modelQuery()->count())->toBe(0)
+        ->and(Storage::disk('public')->allFiles())->toBe([]);
+});
+
 test('conversions land beside the tenant-prefixed original', function (): void {
     Storage::fake('public');
     Media::resolveTenantUsing(fn (): string => 'acme');

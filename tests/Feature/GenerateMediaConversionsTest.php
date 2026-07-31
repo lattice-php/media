@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Lattice\Media\Jobs\GenerateMediaConversions;
 use Lattice\Media\Models\Media;
+use Lattice\Media\Tests\Fixtures\OriginalOverwriteMedia;
 use Lattice\Media\Tests\Fixtures\PartialConversionMedia;
 
 /** A fake disk swallows write failures into `false`; a skipped branch ten lines later would not say so. */
@@ -147,6 +148,18 @@ test('a conversion that fails to return an image throws, keeping the derivatives
         ->and(Storage::disk('public')->exists((string) $media->conversionPath('ok')))->toBeTrue()
         ->and($media->width)->toBe(600)
         ->and($media->height)->toBe(400);
+});
+
+test('a conversion named original refuses to overwrite the source', function (): void {
+    config()->set('media.model', OriginalOverwriteMedia::class);
+    $media = storedImage(600, 400);
+    $bytes = Storage::disk('public')->get($media->path);
+
+    expect(function () use ($media): void {
+        (new GenerateMediaConversions($media))->handle();
+    })->toThrow(RuntimeException::class, 'The [original] media conversion would overwrite the original at [media/source/original.jpg].');
+
+    expect(Storage::disk('public')->get($media->path))->toBe($bytes);
 });
 
 test('an image too large for the remaining memory is skipped with a warning', function (): void {
