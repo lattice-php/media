@@ -139,11 +139,6 @@ class Media extends Model
         return str_starts_with($this->mime_type, 'image/');
     }
 
-    public function isConvertible(): bool
-    {
-        return self::isConvertibleMime($this->mime_type);
-    }
-
     /**
      * The stored mime can be wrong — signed uploads derive it from the file
      * extension — so the probed mime of the actual bytes gets the same check.

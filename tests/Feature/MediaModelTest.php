@@ -17,8 +17,8 @@ test('isImage is derived from the mime type', function (): void {
         ->and(Media::factory()->document()->create()->isImage())->toBeFalse();
 });
 
-test('isConvertible covers only the mimes the image driver can decode', function (string $mime, bool $convertible): void {
-    expect(Media::factory()->make(['mime_type' => $mime])->isConvertible())->toBe($convertible);
+test('isConvertibleMime covers only the mimes the image driver can decode', function (string $mime, bool $convertible): void {
+    expect(Media::isConvertibleMime($mime))->toBe($convertible);
 })->with([
     ['image/jpeg', true],
     ['image/png', true],
@@ -32,7 +32,7 @@ test('isConvertible covers only the mimes the image driver can decode', function
 test('an svg is an image but never convertible', function (): void {
     $svg = Media::factory()->make(['mime_type' => 'image/svg+xml']);
 
-    expect($svg->isImage())->toBeTrue()->and($svg->isConvertible())->toBeFalse();
+    expect($svg->isImage())->toBeTrue()->and(Media::isConvertibleMime($svg->mime_type))->toBeFalse();
 });
 
 test('url serves a generated conversion and falls back to the original', function (): void {
