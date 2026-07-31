@@ -44,6 +44,20 @@ test('a media that is not convertible is never queued', function (): void {
     Bus::assertNothingDispatched();
 });
 
+test('force deletes the derivative it un-maps, so a renamed output leaves nothing behind', function (): void {
+    $media = convertibleMedia();
+    $media->update(['generated_conversions' => [
+        'thumb' => ['path' => 'media/conversions/source-thumb.jpg', 'width' => 400, 'height' => 400],
+    ]]);
+    Storage::disk('public')->put('media/conversions/source-thumb.jpg', 'stale');
+
+    artisan('media:conversions --force')->assertSuccessful();
+
+    expect(Storage::disk('public')->exists('media/conversions/source-thumb.jpg'))->toBeFalse()
+        ->and($media->refresh()->conversionPath('thumb'))->toBe('media/conversions/source-thumb.webp')
+        ->and(Storage::disk('public')->exists('media/conversions/source-thumb.webp'))->toBeTrue();
+});
+
 test('force regenerates a derivative whose file was removed behind the map', function (): void {
     $media = convertibleMedia();
     artisan('media:conversions')->assertSuccessful();
@@ -92,7 +106,9 @@ test('missing skips a media whose conversions are all present', function (): voi
 test('missing covers a complete map whose dimensions were never recorded', function (): void {
     $media = convertibleMedia();
     artisan('media:conversions')->assertSuccessful();
-    $media->refresh()->update(['width' => null, 'height' => null]);
+    $media->refresh();
+    $map = $media->generated_conversions;
+    $media->update(['width' => null, 'height' => null]);
 
     artisan('media:conversions --missing')->assertSuccessful();
 
@@ -100,7 +116,16 @@ test('missing covers a complete map whose dimensions were never recorded', funct
 
     expect($media->width)->toBe(320)
         ->and($media->height)->toBe(200)
-        ->and($media->conversionPath('thumb'))->toBe('media/conversions/source-thumb.webp');
+        ->and($media->generated_conversions)->toBe($map);
+});
+
+test('a media whose stored mime is generic is still reached by the command', function (): void {
+    $media = convertibleMedia();
+    $media->update(['mime_type' => 'application/octet-stream']);
+
+    artisan('media:conversions')->assertSuccessful();
+
+    expect($media->refresh()->conversionPath('thumb'))->toBe('media/conversions/source-thumb.webp');
 });
 
 test('ids narrow the run to the given media', function (): void {

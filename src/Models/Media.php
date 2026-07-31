@@ -153,12 +153,21 @@ class Media extends Model
         return in_array($mime, self::CONVERTIBLE_MIME_TYPES, true);
     }
 
+    public function isProbeable(): bool
+    {
+        return in_array($this->mime_type, self::probeableMimeTypes(), true);
+    }
+
     /**
+     * Worth reading from disk: everything the driver decodes, plus the generic
+     * type a signed upload records when the disk cannot resolve the real one.
+     * The job probes the bytes and skips whatever turns out not to be an image.
+     *
      * @return list<string>
      */
-    public static function convertibleMimeTypes(): array
+    public static function probeableMimeTypes(): array
     {
-        return self::CONVERTIBLE_MIME_TYPES;
+        return [...self::CONVERTIBLE_MIME_TYPES, 'application/octet-stream'];
     }
 
     /**

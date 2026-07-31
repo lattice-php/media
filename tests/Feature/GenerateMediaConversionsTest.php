@@ -85,14 +85,41 @@ test('a non-convertible media is skipped without a conversion map', function ():
         ->and(Storage::disk('public')->allFiles())->toBe([]);
 });
 
-test('a media whose map already holds every conversion never reads the source', function (): void {
+test('a media with every conversion and its dimensions recorded never reads the source', function (): void {
     $media = storedImage();
-    $media->update(['generated_conversions' => ['thumb' => ['path' => 'x.webp', 'width' => 1, 'height' => 1]]]);
+    $media->update([
+        'generated_conversions' => ['thumb' => ['path' => 'x.webp', 'width' => 1, 'height' => 1]],
+        'width' => 320,
+        'height' => 200,
+    ]);
     unreadableDisk();
 
     (new GenerateMediaConversions($media))->handle();
 
     expect($media->refresh()->conversionPath('thumb'))->toBe('x.webp');
+});
+
+test('a complete map with no recorded dimensions is probed without touching the map', function (): void {
+    $media = storedImage(600, 400);
+    $map = ['thumb' => ['path' => 'media/conversions/source-thumb.webp', 'width' => 400, 'height' => 400]];
+    $media->update(['generated_conversions' => $map, 'width' => null, 'height' => null]);
+
+    (new GenerateMediaConversions($media))->handle();
+    $media->refresh();
+
+    expect($media->width)->toBe(600)
+        ->and($media->height)->toBe(400)
+        ->and($media->generated_conversions)->toBe($map)
+        ->and(Storage::disk('public')->allFiles())->toBe(['media/source.jpg']);
+});
+
+test('a media stored under a generic mime is still probed', function (): void {
+    $media = storedImage(600, 400);
+    $media->update(['mime_type' => 'application/octet-stream']);
+
+    (new GenerateMediaConversions($media))->handle();
+
+    expect($media->refresh()->conversionPath('thumb'))->toBe('media/conversions/source-thumb.webp');
 });
 
 test('a missing conversion does read the source', function (): void {

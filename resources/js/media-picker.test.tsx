@@ -61,6 +61,25 @@ describe("MediaPickerComponent", () => {
     expect(container.querySelector('input[type="hidden"][name="cover"]')).toHaveValue("7");
   });
 
+  it("shows the derivative in the chip, not the original", () => {
+    renderPicker({
+      selected: [
+        {
+          id: 7,
+          name: "cover.jpg",
+          url: "/storage/media/cover.jpg",
+          preview_url: "/storage/media/conversions/cover-thumb.webp",
+          mime_type: "image/jpeg",
+        },
+      ],
+    });
+
+    expect(screen.getByTestId("media-picker-item").querySelector("img")).toHaveAttribute(
+      "src",
+      "/storage/media/conversions/cover-thumb.webp",
+    );
+  });
+
   it("clears the submitted value when the chip is removed", () => {
     const { container } = renderPicker();
 

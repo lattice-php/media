@@ -54,14 +54,17 @@ final class GenerateMediaConversions implements ShouldQueue
 
     public function handle(): void
     {
-        if (! $this->media->isConvertible()) {
+        if (! $this->media->isProbeable()) {
             return;
         }
 
         $generated = $this->media->generated_conversions ?? [];
         $missing = array_diff_key($this->conversions(), $generated);
 
-        if ($missing === []) {
+        // Nothing to generate still leaves the dimensions to record: a media
+        // converted before this column existed, or one whose conversions were
+        // all renamed away, only learns its size from the probe below.
+        if ($missing === [] && $this->media->width !== null) {
             return;
         }
 

@@ -6,6 +6,7 @@ namespace Lattice\Media\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Lattice\Media\Jobs\GenerateMediaConversions;
 use Lattice\Media\Models\Media;
 
@@ -13,7 +14,7 @@ final class GenerateConversionsCommand extends Command
 {
     protected $signature = 'media:conversions
         {--missing : Only queue media that is actually missing work}
-        {--only= : Comma-separated conversion names to target instead of all of them}
+        {--only= : Comma-separated conversion names, narrowing what --force drops and what --missing counts}
         {--force : Drop the targeted conversions first so a changed callback is adopted}
         {--id=* : Restrict the run to these media ids}';
 
@@ -31,7 +32,9 @@ final class GenerateConversionsCommand extends Command
                     continue;
                 }
 
-                $this->prepare($media, $names);
+                if ($this->option('force')) {
+                    $this->dropTargeted($media, $names);
+                }
 
                 GenerateMediaConversions::dispatch($media);
                 $queued++;
@@ -48,7 +51,7 @@ final class GenerateConversionsCommand extends Command
      */
     private function query(): Builder
     {
-        $builder = Media::modelQuery()->whereIn('mime_type', Media::convertibleMimeTypes());
+        $builder = Media::modelQuery()->whereIn('mime_type', Media::probeableMimeTypes());
 
         /** @var list<string> $ids */
         $ids = (array) $this->option('id');
@@ -77,43 +80,33 @@ final class GenerateConversionsCommand extends Command
      */
     private function needsWork(Media $media, array $names): bool
     {
-        $generated = $media->generated_conversions ?? [];
-        $wanted = $names === [] ? array_keys($media->defaultConversions()) : $names;
-
-        if (array_diff($wanted, array_keys($generated)) !== []) {
+        if ($media->width === null) {
             return true;
         }
 
-        return $media->width === null && $generated !== [];
+        $wanted = $names === [] ? array_keys($media->defaultConversions()) : $names;
+
+        return array_diff($wanted, array_keys($media->generated_conversions ?? [])) !== [];
     }
 
     /**
-     * Clears map entries so the job regenerates them: everything targeted under
-     * `--force`, and otherwise a single entry for a media whose map is complete
-     * but whose dimensions were never recorded — the job returns before reading
-     * the source when nothing is missing, so it needs one gap to reach the probe
-     * that fills `width`/`height`.
+     * Un-maps the targeted conversions so the job rebuilds them, deleting their
+     * files on the way out: a callback whose output extension changed writes to
+     * a different path, and the old object is unreachable once the map — the
+     * only record of it — forgets it.
      *
      * @param  list<string>  $names
      */
-    private function prepare(Media $media, array $names): void
+    private function dropTargeted(Media $media, array $names): void
     {
         $generated = $media->generated_conversions ?? [];
+        $forget = array_intersect_key($generated, array_flip($names === [] ? array_keys($generated) : $names));
 
-        if ($generated === []) {
+        if ($forget === []) {
             return;
         }
 
-        $forget = match (true) {
-            (bool) $this->option('force') => $names === [] ? array_keys($generated) : $names,
-            $media->width === null => [array_key_first($generated)],
-            default => [],
-        };
-
-        $remaining = array_diff_key($generated, array_flip($forget));
-
-        if (count($remaining) !== count($generated)) {
-            $media->update(['generated_conversions' => $remaining]);
-        }
+        Storage::disk($media->disk)->delete(array_column($forget, 'path'));
+        $media->update(['generated_conversions' => array_diff_key($generated, $forget)]);
     }
 }
