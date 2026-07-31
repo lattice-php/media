@@ -29,7 +29,7 @@ function retryUntil(Closure $assert, int $attempts = 20, int $sleepMicroseconds 
 
             $between?->__invoke();
 
-            usleep($sleepMicroseconds);
+            \Amp\delay($sleepMicroseconds / 1_000_000);
         }
     }
 }
