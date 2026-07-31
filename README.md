@@ -152,6 +152,30 @@ A single library overrides the config defaults per instance:
 MediaLibrary::make()->signedUpload()->disk('s3')->accept('image/*');
 ```
 
+## Multi-tenancy
+
+Register a tenant resolver in a service provider to scope every media query, stamp new rows, and prefix storage paths per tenant:
+
+```php
+use Lattice\Media\Models\Media;
+
+Media::resolveTenantUsing(fn () => auth()->user()?->tenant_id);
+```
+
+Add the tenant column to the `media` table yourself (the package does not migrate it):
+
+```php
+$table->string('tenant_id')->nullable()->index();
+```
+
+When the resolver returns `null`, media queries run unscoped — use this in console contexts or for central libraries. To override the column name, pass the `column` parameter:
+
+```php
+Media::resolveTenantUsing(fn () => auth()->user()?->account_id, column: 'account_id');
+```
+
+Storage is prefixed per tenant: `media/{tenant}/{uuid}/original.{ext}`, with conversions beside the original (`media/{tenant}/{uuid}/thumb.webp`).
+
 ## Translations
 
 The components' strings ship with inline English defaults. With
