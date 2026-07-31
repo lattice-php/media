@@ -31,6 +31,7 @@ declare module "@lattice-php/lattice" {
             url: string | null;
             preview_url: string | null;
             mime_type: string;
+            values?: Record<string, unknown>;
           }[]
         | null;
       tooltip: string | null;

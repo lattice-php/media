@@ -1,10 +1,34 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import type { Schema } from "@lattice-php/lattice/core/types";
+import { createPlugin, createRegistry, eagerComponent, RegistryContext } from "@lattice-php/lattice/core";
+import type { RendererComponent, Schema } from "@lattice-php/lattice/core/types";
 import { FormProvider } from "@lattice-php/lattice/form/hooks/context";
+import { useFieldScope } from "@lattice-php/lattice/form/hooks/field-scope";
 import { FormValuesProvider } from "@lattice-php/lattice/form/hooks/values";
 import { fakeFormContext, fakeNode } from "./test-support";
 import MediaPickerComponent from "./media-picker";
+
+const CaptionField: RendererComponent<"field.text-input"> = ({ node }) => {
+  const scope = useFieldScope();
+  const value = (scope?.getValue(node.props.name) as string | undefined) ?? "";
+
+  return (
+    <input
+      data-test="caption-input"
+      name={scope?.scopedName(node.props.name) ?? node.props.name}
+      onChange={(event) => scope?.setValue(node.props.name, event.target.value)}
+      value={value}
+    />
+  );
+};
+
+const registry = createRegistry(
+  createPlugin({ name: "test", components: { "field.text-input": eagerComponent(CaptionField) } }),
+);
+
+function captionTemplate(): Schema {
+  return [...librarySchema([]), { type: "field.text-input", props: { name: "caption", label: "Caption" } }] as Schema;
+}
 
 function libraryRow(id: number, name: string) {
   return {
@@ -45,11 +69,13 @@ function renderPicker(props: Record<string, unknown> = {}, schema?: Schema) {
   });
 
   return render(
-    <FormProvider value={fakeFormContext({ action: "/forms/products", componentRef: "ref-1" })}>
-      <FormValuesProvider initial={{}}>
-        <MediaPickerComponent node={node}>{null}</MediaPickerComponent>
-      </FormValuesProvider>
-    </FormProvider>,
+    <RegistryContext.Provider value={registry}>
+      <FormProvider value={fakeFormContext({ action: "/forms/products", componentRef: "ref-1" })}>
+        <FormValuesProvider initial={{}}>
+          <MediaPickerComponent node={node}>{null}</MediaPickerComponent>
+        </FormValuesProvider>
+      </FormProvider>
+    </RegistryContext.Provider>,
   );
 }
 
@@ -124,5 +150,95 @@ describe("MediaPickerComponent", () => {
     fireEvent.click(screen.getByTestId("media-pick-confirm"));
 
     expect(container.querySelectorAll('input[type="hidden"][name="cover[]"]')).toHaveLength(2);
+  });
+
+  it("submits indexed id inputs and seeds row values when a template is present", () => {
+    const { container } = renderPicker(
+      {
+        name: "gallery",
+        multiple: true,
+        selected: [
+          { id: 7, name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: { caption: "Front" } },
+          { id: 9, name: "b.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: {} },
+        ],
+      },
+      captionTemplate(),
+    );
+
+    expect(container.querySelector('input[type="hidden"][name="gallery[0][id]"]')).toHaveValue("7");
+    expect(container.querySelector('input[type="hidden"][name="gallery[1][id]"]')).toHaveValue("9");
+  });
+
+  it("keeps plain id inputs when no template is present", () => {
+    const { container } = renderPicker(
+      {
+        name: "gallery",
+        multiple: true,
+        selected: [{ id: 7, name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg" }],
+      },
+      librarySchema([]),
+    );
+
+    expect(container.querySelector('input[type="hidden"][name="gallery[]"]')).toHaveValue("7");
+  });
+
+  it("wires each row's template field to its own scope for reading and writing values", () => {
+    renderPicker(
+      {
+        name: "gallery",
+        multiple: true,
+        selected: [
+          { id: 7, name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: { caption: "Front" } },
+          { id: 9, name: "b.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: {} },
+        ],
+      },
+      captionTemplate(),
+    );
+
+    const inputs = screen.getAllByTestId("caption-input");
+    expect(inputs[0]).toHaveAttribute("name", "gallery[0][caption]");
+    expect(inputs[0]).toHaveValue("Front");
+    expect(inputs[1]).toHaveAttribute("name", "gallery[1][caption]");
+    expect(inputs[1]).toHaveValue("");
+
+    fireEvent.change(inputs[1], { target: { value: "Back" } });
+
+    expect(inputs[1]).toHaveValue("Back");
+    expect(inputs[0]).toHaveValue("Front");
+  });
+
+  it("reindexes remaining rows and keeps their values after removing one", () => {
+    const { container } = renderPicker(
+      {
+        name: "gallery",
+        multiple: true,
+        selected: [
+          { id: 7, name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: { caption: "Front" } },
+          { id: 9, name: "b.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: { caption: "Back" } },
+        ],
+      },
+      captionTemplate(),
+    );
+
+    fireEvent.click(screen.getAllByTestId("media-picker-remove")[0]);
+
+    expect(container.querySelector('input[type="hidden"][name="gallery[0][id]"]')).toHaveValue("9");
+    expect(screen.getByTestId("caption-input")).toHaveValue("Back");
+  });
+
+  it("submits a single-mode template row indexed at 0", () => {
+    const { container } = renderPicker(
+      {
+        name: "cover",
+        multiple: false,
+        selected: [
+          { id: 7, name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: { caption: "Front" } },
+        ],
+      },
+      captionTemplate(),
+    );
+
+    expect(container.querySelector('input[type="hidden"][name="cover[0][id]"]')).toHaveValue("7");
+    expect(screen.getByTestId("caption-input")).toHaveValue("Front");
   });
 });
