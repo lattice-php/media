@@ -10,12 +10,15 @@ use Lattice\Media\Jobs\GenerateMediaConversions;
 use Lattice\Media\Models\Media;
 use Lattice\Media\Tests\Fixtures\PartialConversionMedia;
 
+/** A fake disk swallows write failures into `false`; a skipped branch ten lines later would not say so. */
+function writeToDisk(string $path, string $contents): void
+{
+    expect(Storage::disk('public')->put($path, $contents))->toBeTrue();
+}
+
 function storedImage(int $width = 320, int $height = 200): Media
 {
-    Storage::disk('public')->put(
-        'media/source.jpg',
-        UploadedFile::fake()->image('source.jpg', $width, $height)->getContent(),
-    );
+    writeToDisk('media/source.jpg', (string) UploadedFile::fake()->image('source.jpg', $width, $height)->getContent());
 
     return Media::factory()->create(['path' => 'media/source.jpg', 'mime_type' => 'image/jpeg']);
 }
@@ -120,14 +123,14 @@ test('a conversion that fails to return an image throws, keeping the derivatives
 });
 
 test('an image too large for the remaining memory is skipped with a warning', function (): void {
-    $limit = ini_get('memory_limit');
-    ini_set('memory_limit', '512M');
-
-    Storage::disk('public')->put('media/huge.png', pngHeader(40000, 40000));
+    writeToDisk('media/huge.png', pngHeader(40000, 40000));
     $media = Media::factory()->create(['path' => 'media/huge.png', 'mime_type' => 'image/png']);
     expectWarning('not enough memory');
 
+    $limit = ini_get('memory_limit');
+
     try {
+        ini_set('memory_limit', '512M');
         (new GenerateMediaConversions($media))->handle();
     } finally {
         ini_set('memory_limit', $limit);
@@ -146,7 +149,7 @@ test('a vanished source is logged instead of failing the job', function (): void
 });
 
 test('a source that is not an image at all is logged instead of failing the job', function (): void {
-    Storage::disk('public')->put('media/lying.jpg', 'not an image');
+    writeToDisk('media/lying.jpg', 'not an image');
     $media = Media::factory()->create(['path' => 'media/lying.jpg']);
     expectWarning('not a convertible image');
 
@@ -159,7 +162,7 @@ test('a source whose real format is not the one its extension claims is skipped'
     $image = imagecreatetruecolor(60, 40);
     ob_start();
     imagewbmp($image);
-    Storage::disk('public')->put('media/mislabelled.jpg', (string) ob_get_clean());
+    writeToDisk('media/mislabelled.jpg', (string) ob_get_clean());
 
     $media = Media::factory()->create(['path' => 'media/mislabelled.jpg', 'mime_type' => 'image/jpeg']);
     expectWarning('not a convertible image');
@@ -170,7 +173,7 @@ test('a source whose real format is not the one its extension claims is skipped'
 });
 
 test('a source the driver cannot decode is logged instead of failing the job', function (): void {
-    Storage::disk('public')->put('media/corrupt.png', pngHeader(600, 400));
+    writeToDisk('media/corrupt.png', pngHeader(600, 400));
     $media = Media::factory()->create(['path' => 'media/corrupt.png', 'mime_type' => 'image/png']);
     expectWarning('could not process the source');
 
@@ -180,6 +183,10 @@ test('a source the driver cannot decode is logged instead of failing the job', f
     expect($media->generated_conversions)->toBe([])
         ->and($media->width)->toBe(600)
         ->and($media->height)->toBe(400);
+});
+
+test('the job waits for the surrounding transaction to commit', function (): void {
+    expect((new GenerateMediaConversions(Media::factory()->create()))->afterCommit)->toBeTrue();
 });
 
 test('the configured queue is honoured', function (): void {

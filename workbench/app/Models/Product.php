@@ -3,10 +3,12 @@ declare(strict_types=1);
 
 namespace Workbench\App\Models;
 
+use Closure;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Image\Image;
 use Lattice\Media\Models\Attachment;
 use Lattice\Media\Models\Concerns\HasMedia;
 use Lattice\Media\Models\Media;
@@ -31,6 +33,16 @@ class Product extends Model
     public function galleryMedia(): MorphToMany
     {
         return $this->media('gallery');
+    }
+
+    /**
+     * @return array<array-key, string|Closure(Image): Image>
+     */
+    public function mediaConversions(string $collection): array
+    {
+        return $collection === 'gallery'
+            ? ['card' => fn (Image $image): Image => $image->cover(1200, 800)->optimize('webp', 75)]
+            : [];
     }
 
     public function getGalleryCoverUrlAttribute(): ?string

@@ -3,7 +3,10 @@ declare(strict_types=1);
 
 namespace Lattice\Media\Models\Concerns;
 
+use Closure;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Image\Image;
+use Lattice\Media\Jobs\GenerateMediaConversions;
 use Lattice\Media\Models\Attachment;
 use Lattice\Media\Models\Media;
 
@@ -22,6 +25,26 @@ trait HasMedia
     }
 
     /**
+     * Conversions this collection needs on top of the media's defaults.
+     *
+     * Override this hook on the consuming model. Keys are conversion names,
+     * values are callbacks over an immutable `Image` that must return the
+     * transformed image. A bare string entry (`['thumb']`) reuses the
+     * globally defined conversion of that name from the media's
+     * `defaultConversions()`.
+     *
+     * Conversion names are a global namespace: one name is one spec
+     * everywhere, so two collections that need different sizes must ask for
+     * different names.
+     *
+     * @return array<array-key, string|Closure(Image): Image>
+     */
+    public function mediaConversions(string $collection): array
+    {
+        return [];
+    }
+
+    /**
      * @param  array<int, int|string>  $mediaIds
      */
     public function syncMedia(array $mediaIds, string $collection = 'default'): void
@@ -32,7 +55,11 @@ trait HasMedia
             $sync[$id] = ['collection' => $collection, 'sort_order' => $index + 1];
         }
 
-        $this->media($collection)->sync($sync);
+        $attached = $this->media($collection)->sync($sync)['attached'];
+
+        foreach (Media::modelQuery()->findMany($attached) as $media) {
+            GenerateMediaConversions::dispatch($media, $this, $collection);
+        }
     }
 
     public function firstMediaUrl(string $collection = 'default'): ?string

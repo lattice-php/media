@@ -28,6 +28,11 @@ final class GenerateMediaConversions implements ShouldQueue
         public ?Model $attachable = null,
         public ?string $collection = null,
     ) {
+        // `syncMedia()` runs inside the transaction that created the parent, and
+        // `SerializesModels` would restore the attachable from a row a worker
+        // cannot see yet. The trait declares the property, so set it fluently.
+        $this->afterCommit();
+
         $queue = config('media.queue');
 
         if (is_string($queue) && $queue !== '') {
@@ -139,19 +144,36 @@ final class GenerateMediaConversions implements ShouldQueue
     }
 
     /**
+     * The defaults plus the collection's extras. An attachable that does not
+     * use `HasMedia` simply contributes nothing.
+     *
      * @return array<string, Closure(Image): Image>
      */
     private function conversions(): array
     {
         $conversions = $this->media->defaultConversions();
 
-        // The trait method arrives with per-collection conversions; until then
-        // an attachable without it simply contributes nothing.
-        if ($this->attachable !== null && method_exists($this->attachable, 'mediaConversions')) {
-            /** @var array<string, Closure(Image): Image> $extra */
-            $extra = $this->attachable->mediaConversions($this->collection ?? 'default');
+        if ($this->attachable === null || ! method_exists($this->attachable, 'mediaConversions')) {
+            return $conversions;
+        }
 
-            $conversions = [...$conversions, ...$extra];
+        /** @var array<array-key, string|Closure(Image): Image> $extra */
+        $extra = $this->attachable->mediaConversions($this->collection ?? 'default');
+
+        foreach ($extra as $name => $conversion) {
+            if (is_string($conversion)) {
+                if (! isset($conversions[$conversion])) {
+                    throw new RuntimeException("The [{$conversion}] media conversion is not defined on ".$this->media::class.'.');
+                }
+
+                continue;
+            }
+
+            if (! is_string($name)) {
+                throw new RuntimeException('A media conversion closure must be keyed by its conversion name.');
+            }
+
+            $conversions[$name] = $conversion;
         }
 
         return $conversions;
