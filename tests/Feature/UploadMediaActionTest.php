@@ -30,6 +30,7 @@ test('multipart uploads create media rows on the configured disk', function (): 
         ->and($media->disk)->toBe('public')
         ->and($media->mime_type)->toBe('image/jpeg')
         ->and($media->uploaded_by)->toBe(auth()->id())
+        ->and($media->path)->toMatch('#^media/[0-9a-f-]{36}/original\.jpg$#')
         ->and(Storage::disk('public')->exists($media->path))->toBeTrue();
 });
 
@@ -58,7 +59,7 @@ test('signed temp keys are finalized out of the temp prefix', function (): void 
 
     $media = Media::query()->sole();
 
-    expect($media->path)->toStartWith('media/')
+    expect($media->path)->toMatch('#^media/[0-9a-f-]{36}/original\.jpg$#')
         ->and(Storage::disk('public')->exists($media->path))->toBeTrue()
         ->and(Storage::disk('public')->exists('tmp/abc123.jpg'))->toBeFalse();
 });
@@ -77,7 +78,7 @@ test('a sealed context overrides the configured signed flag and disk', function 
     $media = Media::query()->sole();
 
     expect($media->disk)->toBe('uploads')
-        ->and($media->path)->toStartWith('media/')
+        ->and($media->path)->toMatch('#^media/[0-9a-f-]{36}/original\.jpg$#')
         ->and(Storage::disk('uploads')->exists($media->path))->toBeTrue()
         ->and(Storage::disk('uploads')->exists('tmp/abc123.jpg'))->toBeFalse();
 });

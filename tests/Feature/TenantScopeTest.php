@@ -1,9 +1,12 @@
 <?php
 declare(strict_types=1);
 
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Lattice\Lattice\Facades\Lattice;
 use Lattice\Lattice\Tables\Components\Table;
+use Lattice\Media\Actions\UploadMediaAction;
 use Lattice\Media\Forms\Components\MediaPicker;
 use Lattice\Media\Models\Media;
 use Lattice\Media\Rules\AttachableMedia;
@@ -84,4 +87,21 @@ test('the media table listing only returns the current tenant', function (): voi
         ->assertOk()
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.id', $own->getKey());
+});
+
+test('uploads store under a tenant-prefixed per-media directory and stamp the row', function (): void {
+    Storage::fake('public');
+    Lattice::actions([UploadMediaAction::class]);
+    actingAs(workbenchTestUser());
+    Media::resolveTenantUsing(fn (): string => 'acme');
+
+    $this->callAction(UploadMediaAction::class, [
+        'files' => [UploadedFile::fake()->image('team.jpg', 100, 100)],
+    ])->assertOk();
+
+    $media = Media::modelQuery()->sole();
+
+    expect($media->path)->toMatch('#^media/acme/[0-9a-f-]{36}/original\.jpg$#')
+        ->and($media->getAttribute('tenant_id'))->toBe('acme')
+        ->and(Storage::disk('public')->exists($media->path))->toBeTrue();
 });

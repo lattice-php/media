@@ -104,6 +104,18 @@ final class UploadMediaAction extends FormActionDefinition
         return $field;
     }
 
+    private function mediaDirectory(): string
+    {
+        $tenant = Media::tenantValue();
+
+        return 'media/'.($tenant === null ? '' : "{$tenant}/").Str::uuid()->toString();
+    }
+
+    private function extensionSuffix(string $extension): string
+    {
+        return $extension === '' ? '' : ".{$extension}";
+    }
+
     /**
      * @return list<Media>
      */
@@ -118,8 +130,8 @@ final class UploadMediaAction extends FormActionDefinition
 
         foreach ($uploadedFiles as $file) {
             $path = $file->storeAs(
-                'media',
-                Str::uuid()->toString().'.'.$file->getClientOriginalExtension(),
+                $this->mediaDirectory(),
+                'original'.$this->extensionSuffix($file->getClientOriginalExtension()),
                 $field->resolveDisk(),
             );
 
@@ -136,8 +148,8 @@ final class UploadMediaAction extends FormActionDefinition
         if ($signedKeys !== []) {
             foreach ($field->finalizeSignedUploads(
                 $signedKeys,
-                fn (string $key, array $metadata): string => 'media/'.Str::uuid()->toString()
-                    .($metadata['extension'] !== '' ? '.'.$metadata['extension'] : ''),
+                fn (string $key, array $metadata): string => $this->mediaDirectory().'/original'
+                    .$this->extensionSuffix((string) $metadata['extension']),
             ) as $upload) {
                 $stored[] = Media::modelQuery()->create([
                     'disk' => $upload['disk'],
