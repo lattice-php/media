@@ -3,10 +3,12 @@ declare(strict_types=1);
 
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Lattice\Lattice\Facades\Lattice;
 use Lattice\Media\Actions\UploadMediaAction;
+use Lattice\Media\Jobs\GenerateMediaConversions;
 use Lattice\Media\Models\Media;
 
 use function Pest\Laravel\actingAs;
@@ -180,6 +182,38 @@ test('signs, uploads, and finalizes a key against rustfs end-to-end', function (
         Media::query()->where('disk', 's3')->delete();
     }
 })->group('rustfs');
+
+test('multipart uploads queue their conversions', function (): void {
+    Bus::fake();
+
+    $this->callAction(UploadMediaAction::class, [
+        'files' => [UploadedFile::fake()->image('team.jpg')],
+    ])->assertOk();
+
+    $media = Media::query()->sole();
+
+    Bus::assertDispatchedTimes(GenerateMediaConversions::class, 1);
+    Bus::assertDispatched(
+        GenerateMediaConversions::class,
+        fn (GenerateMediaConversions $job): bool => $job->media->is($media) && $job->attachable === null,
+    );
+});
+
+test('signed uploads queue their conversions once finalized', function (): void {
+    Bus::fake();
+    config()->set('media.signed_uploads', true);
+    Storage::disk('public')->put('tmp/abc123.jpg', 'bytes');
+
+    $this->callAction(UploadMediaAction::class, ['files' => ['tmp/abc123.jpg']])->assertOk();
+
+    $media = Media::query()->sole();
+
+    Bus::assertDispatchedTimes(GenerateMediaConversions::class, 1);
+    Bus::assertDispatched(
+        GenerateMediaConversions::class,
+        fn (GenerateMediaConversions $job): bool => $job->media->is($media),
+    );
+});
 
 test('guests cannot upload', function (): void {
     auth()->logout();

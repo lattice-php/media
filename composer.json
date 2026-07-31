@@ -5,6 +5,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.4",
+        "intervention/image": "^4.0",
         "lattice-php/lattice": "^0.29"
     },
     "require-dev": {

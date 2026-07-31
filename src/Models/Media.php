@@ -135,7 +135,16 @@ class Media extends Model
 
     public function isConvertible(): bool
     {
-        return in_array($this->mime_type, self::CONVERTIBLE_MIME_TYPES, true);
+        return self::isConvertibleMime($this->mime_type);
+    }
+
+    /**
+     * The stored mime can be wrong — signed uploads derive it from the file
+     * extension — so the probed mime of the actual bytes gets the same check.
+     */
+    public static function isConvertibleMime(string $mime): bool
+    {
+        return in_array($mime, self::CONVERTIBLE_MIME_TYPES, true);
     }
 
     /**

@@ -15,6 +15,7 @@ use Lattice\Lattice\Forms\Components\FileUpload;
 use Lattice\Lattice\Forms\Components\Form;
 use Lattice\Lattice\Ui\Enums\HttpMethod;
 use Lattice\Lattice\Ui\Enums\Variant;
+use Lattice\Media\Jobs\GenerateMediaConversions;
 use Lattice\Media\Models\Media;
 
 #[AsAction('media.upload')]
@@ -123,6 +124,10 @@ final class UploadMediaAction extends FormActionDefinition
                     'uploaded_by' => auth()->id(),
                 ]);
             }
+        }
+
+        foreach ($stored as $media) {
+            GenerateMediaConversions::dispatch($media);
         }
 
         return $stored;
