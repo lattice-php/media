@@ -6,6 +6,7 @@ namespace Lattice\Media;
 
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Lattice\Media\Console\Commands\GenerateConversionsCommand;
 use Lattice\Media\Models\Media;
 use Lattice\Media\Policies\MediaPolicy;
 
@@ -19,6 +20,10 @@ final class MediaServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([GenerateConversionsCommand::class]);
+        }
 
         Gate::policy(Media::class, MediaPolicy::class);
 
