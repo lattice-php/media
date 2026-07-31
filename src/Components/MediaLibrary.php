@@ -11,6 +11,7 @@ use Lattice\Media\Actions\DeleteMediaAction;
 use Lattice\Media\Actions\UpdateMediaAction;
 use Lattice\Media\Actions\UploadMediaAction;
 use Lattice\Media\Tables\MediaTable;
+use Stringable;
 
 #[AsComponent('media.library')]
 final class MediaLibrary extends ContainerComponent
@@ -22,6 +23,9 @@ final class MediaLibrary extends ContainerComponent
     public bool $signed = false;
 
     protected ?string $disk = null;
+
+    /** @var list<string> */
+    protected array $uploadRules = [];
 
     public static function make(string $key = 'media-library'): static
     {
@@ -56,6 +60,25 @@ final class MediaLibrary extends ContainerComponent
     public function disk(string $disk): static
     {
         $this->disk = $disk;
+
+        return $this->schema([]);
+    }
+
+    /**
+     * Validation rules every uploaded file must pass, on top of the accepted
+     * types and the size cap.
+     *
+     * The upload context is sealed as JSON, so rules travel as strings: pass
+     * string rules (`'dimensions:max_width=4000'`) or rule objects that
+     * stringify (`Rule::dimensions()->maxWidth(4000)`), never closures or
+     * custom rule classes. `dimensions` needs the bytes, so it only applies to
+     * multipart uploads — see the signed-upload caveat in the README.
+     *
+     * @param  array<int, string|Stringable>  $rules
+     */
+    public function uploadRules(array $rules): static
+    {
+        $this->uploadRules = array_map(strval(...), $rules);
 
         return $this->schema([]);
     }
@@ -103,6 +126,10 @@ final class MediaLibrary extends ContainerComponent
             $context['accepted_types'] = array_values(array_filter(
                 array_map(trim(...), explode(',', $this->accept)),
             ));
+        }
+
+        if ($this->uploadRules !== []) {
+            $context['upload_rules'] = $this->uploadRules;
         }
 
         return $context;

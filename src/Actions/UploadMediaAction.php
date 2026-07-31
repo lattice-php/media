@@ -5,7 +5,9 @@ namespace Lattice\Media\Actions;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Lattice\Lattice\Actions\ActionResult;
 use Lattice\Lattice\Actions\Components\Action;
@@ -37,6 +39,28 @@ final class UploadMediaAction extends FormActionDefinition
     public function formSchema(Form $form, Request $request): Form
     {
         return $form->schema([$this->field()]);
+    }
+
+    /**
+     * The per-file rules sealed by the library instance run in their own pass:
+     * Laravel's file rules only accept a file instance, while the field's own
+     * rule bag validates the `files` array. Signed uploads submit temporary
+     * keys rather than files, so nothing is checked there — `dimensions` and
+     * friends are multipart-only.
+     *
+     * @return array<string, mixed>
+     */
+    #[\Override]
+    public function validate(Request $request): array
+    {
+        $validated = parent::validate($request);
+        $rules = array_values(array_filter((array) $this->context('upload_rules', []), is_string(...)));
+
+        if ($rules !== []) {
+            Validator::make(['files' => Arr::wrap($request->file('files', []))], ['files.*' => $rules])->validate();
+        }
+
+        return $validated;
     }
 
     public function handle(Request $request): ActionResult
