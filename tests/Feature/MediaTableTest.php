@@ -32,8 +32,8 @@ test('the media table serializes rows with url, name and usage count', function 
 
 test('the row payload previews the generated derivative next to the original', function (): void {
     $media = Media::factory()->create([
-        'path' => 'media/hero.jpg',
-        'meta' => ['conversions' => ['thumb' => ['path' => 'media/conversions/hero-thumb.webp', 'width' => 400, 'height' => 400]]],
+        'path' => 'media/hero/original.jpg',
+        'meta' => ['conversions' => ['thumb' => ['path' => 'media/hero/thumb.webp', 'width' => 400, 'height' => 400]]],
     ]);
 
     $ref = $this->latticeRef(wire(Table::use(MediaTable::class)));
@@ -42,13 +42,13 @@ test('the row payload previews the generated derivative next to the original', f
         ->assertOk()
         ->json('data.0');
 
-    expect($row['preview_url'])->toContain('hero-thumb.webp')
+    expect($row['preview_url'])->toContain('hero/thumb.webp')
         ->and($row['preview_url'])->toBe($media->url('thumb'))
-        ->and($row['url'])->toContain('media/hero.jpg');
+        ->and($row['url'])->toContain('media/hero/original.jpg');
 });
 
 test('the row payload falls back to the original preview while no conversion exists', function (): void {
-    Media::factory()->create(['path' => 'media/hero.jpg']);
+    Media::factory()->create(['path' => 'media/hero/original.jpg']);
 
     $ref = $this->latticeRef(wire(Table::use(MediaTable::class)));
 

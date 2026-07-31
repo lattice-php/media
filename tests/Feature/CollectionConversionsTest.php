@@ -12,11 +12,11 @@ use Workbench\App\Models\Product;
 function galleryImage(): Media
 {
     expect(Storage::disk('public')->put(
-        'media/shot.jpg',
+        'media/shot/original.jpg',
         (string) UploadedFile::fake()->image('shot.jpg', 600, 400)->getContent(),
     ))->toBeTrue();
 
-    return Media::factory()->create(['path' => 'media/shot.jpg', 'mime_type' => 'image/jpeg']);
+    return Media::factory()->create(['path' => 'media/shot/original.jpg', 'mime_type' => 'image/jpeg']);
 }
 
 function conversionProduct(string $name): ConversionProduct
@@ -95,7 +95,7 @@ test("the collection's conversion is generated on top of the defaults", function
 
     expect(array_keys($media->conversions()))->toEqualCanonicalizing(['thumb', 'card'])
         ->and($media->conversions()['card'] ?? null)
-        ->toBe(['path' => 'media/conversions/shot-card.webp', 'width' => 1200, 'height' => 800])
+        ->toBe(['path' => 'media/shot/card.webp', 'width' => 1200, 'height' => 800])
         ->and(Storage::disk('public')->exists((string) $media->conversionPath('thumb')))->toBeTrue()
         ->and(Storage::disk('public')->exists((string) $media->conversionPath('card')))->toBeTrue();
 });
@@ -107,7 +107,7 @@ test('a bare string reuses the globally defined conversion of that name', functi
     $media->refresh();
 
     expect(array_keys($media->conversions()))->toBe(['thumb'])
-        ->and(Storage::disk('public')->files('media/conversions'))->toHaveCount(1);
+        ->and(Storage::disk('public')->files('media/shot'))->toHaveCount(2);
 });
 
 test('a bare string naming no global conversion fails loudly', function (): void {
@@ -129,7 +129,7 @@ test('two collections asking for the same conversion name produce one file and o
     (new GenerateMediaConversions($media, $product, 'hero'))->handle();
 
     expect($media->refresh()->conversions())->toBe($generated)
-        ->and(Storage::disk('public')->files('media/conversions'))->toHaveCount(2);
+        ->and(Storage::disk('public')->files('media/shot'))->toHaveCount(3);
 });
 
 test('detaching deletes no derivative: another attachment may rely on the same name', function (): void {

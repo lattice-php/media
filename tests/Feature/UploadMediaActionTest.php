@@ -217,7 +217,7 @@ test('a signed upload ends with a real derivative object on s3', function (): vo
 
         expect($media->mime_type)->toBe('image/jpeg')
             ->and($derivative)->not->toBeNull()
-            ->and($derivative)->toEndWith('-thumb.webp')
+            ->and($derivative)->toEndWith('/thumb.webp')
             ->and(Storage::disk('s3')->exists((string) $derivative))->toBeTrue()
             ->and(Storage::disk('s3')->get((string) $derivative))->toStartWith('RIFF')
             ->and($media->width)->toBe(900)

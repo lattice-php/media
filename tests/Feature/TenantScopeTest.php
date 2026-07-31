@@ -4,10 +4,12 @@ declare(strict_types=1);
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Lattice\Lattice\Facades\Lattice;
 use Lattice\Lattice\Tables\Components\Table;
 use Lattice\Media\Actions\UploadMediaAction;
 use Lattice\Media\Forms\Components\MediaPicker;
+use Lattice\Media\Jobs\GenerateMediaConversions;
 use Lattice\Media\Models\Media;
 use Lattice\Media\Rules\AttachableMedia;
 use Lattice\Media\Tables\MediaTable;
@@ -104,4 +106,18 @@ test('uploads store under a tenant-prefixed per-media directory and stamp the ro
     expect($media->path)->toMatch('#^media/acme/[0-9a-f-]{36}/original\.jpg$#')
         ->and($media->getAttribute('tenant_id'))->toBe('acme')
         ->and(Storage::disk('public')->exists($media->path))->toBeTrue();
+});
+
+test('conversions land beside the tenant-prefixed original', function (): void {
+    Storage::fake('public');
+    Media::resolveTenantUsing(fn (): string => 'acme');
+
+    $path = 'media/acme/'.Str::uuid()->toString().'/original.jpg';
+    Storage::disk('public')->put($path, (string) UploadedFile::fake()->image('original.jpg', 320, 200)->getContent());
+    $media = Media::factory()->create(['path' => $path, 'mime_type' => 'image/jpeg']);
+
+    (new GenerateMediaConversions($media))->handle();
+
+    expect($media->refresh()->conversionPath('thumb'))
+        ->toBe(dirname($media->path).'/thumb.webp');
 });
