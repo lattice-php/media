@@ -48,7 +48,8 @@ final class UpdateMediaAction extends FormActionDefinition
         $media = $this->media($request);
         $data = $this->validate($request);
 
-        $media->update(['name' => $data['name'], 'alt' => $data['alt'] ?? null]);
+        $media->update(['name' => $data['name']]);
+        $media->mergeMeta(['alt' => $data['alt'] ?? null]);
 
         return ActionResult::success(['id' => $media->getKey()])
             ->toast(__('media::media.actions.update.toast'), Variant::Success)

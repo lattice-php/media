@@ -19,10 +19,10 @@ use Throwable;
  * @property string $name
  * @property string $mime_type
  * @property int $size
- * @property array{width?: int, height?: int, conversions?: array<string, array{path: string, width: int, height: int}>}|null $meta
+ * @property array{width?: int, height?: int, alt?: string, conversions?: array<string, array{path: string, width: int, height: int}>}|null $meta
  * @property-read int|null $width
  * @property-read int|null $height
- * @property string|null $alt
+ * @property-read string|null $alt
  * @property int|null $uploaded_by
  */
 class Media extends Model
@@ -47,7 +47,7 @@ class Media extends Model
     protected $hidden = ['meta'];
 
     /** @var list<string> */
-    protected $appends = ['width', 'height'];
+    protected $appends = ['width', 'height', 'alt'];
 
     /**
      * The configured model class: consumers subclass `Media` and point
@@ -220,6 +220,11 @@ class Media extends Model
     protected function getHeightAttribute(): ?int
     {
         return $this->meta['height'] ?? null;
+    }
+
+    protected function getAltAttribute(): ?string
+    {
+        return $this->meta['alt'] ?? null;
     }
 
     protected static function newFactory(): MediaFactory
