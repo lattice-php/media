@@ -5,6 +5,7 @@ namespace Lattice\Media\Tests;
 
 use Bambamboole\LaravelI18Next\I18NextServiceProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Env;
 use Inertia\ServiceProvider as InertiaServiceProvider;
 use Lattice\Lattice\LatticeServiceProvider;
 use Lattice\Lattice\Support\Testing\InteractsWithLatticeComponents;
@@ -28,16 +29,16 @@ abstract class TestCase extends BaseTestCase
         // testbench.yaml's env list only reaches the CLI-booted workbench app
         // (artisan/composer serve), not this ephemeral TestCase application —
         // mirror the same local RustFS defaults here so `->group('rustfs')`
-        // tests resolve a working s3 disk.
+        // tests resolve a working s3 disk. CI overrides via AWS_* env vars.
         $app['config']->set('filesystems.disks.s3', [
             'driver' => 's3',
-            'key' => 'herd',
-            'secret' => 'secretkey',
-            'region' => 'us-east-1',
-            'bucket' => 'lattice',
-            'url' => 'https://rustfs.herd.test/lattice',
-            'endpoint' => 'https://rustfs.herd.test',
-            'use_path_style_endpoint' => true,
+            'key' => Env::get('AWS_ACCESS_KEY_ID', 'herd'),
+            'secret' => Env::get('AWS_SECRET_ACCESS_KEY', 'secretkey'),
+            'region' => Env::get('AWS_DEFAULT_REGION', 'us-east-1'),
+            'bucket' => Env::get('AWS_BUCKET', 'lattice'),
+            'url' => Env::get('AWS_URL', 'https://rustfs.herd.test/lattice'),
+            'endpoint' => Env::get('AWS_ENDPOINT', 'https://rustfs.herd.test'),
+            'use_path_style_endpoint' => Env::get('AWS_USE_PATH_STYLE_ENDPOINT', true),
             'throw' => false,
             'report' => false,
         ]);
