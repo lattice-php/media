@@ -4,6 +4,7 @@ declare(strict_types=1);
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Lattice\Media\Models\Attachment;
 use Lattice\Media\Models\Media;
 use Workbench\App\Models\Product;
@@ -74,7 +75,7 @@ test('attachments carry an id, timestamps and a cast meta payload', function ():
 
     $row = DB::table('media_attachments')->sole();
 
-    expect($row->id)->toBeInt()
+    expect(Str::isUuid($row->id))->toBeTrue()
         ->and($row->created_at)->not->toBeNull()
         ->and($row->updated_at)->not->toBeNull()
         ->and($row->meta)->toBeNull();
@@ -93,6 +94,7 @@ test('the same media cannot attach twice to one collection', function (): void {
     $product->syncMedia([$media->getKey()], 'images');
 
     DB::table('media_attachments')->insert([
+        'id' => Str::uuid()->toString(),
         'media_id' => $media->getKey(),
         'attachable_type' => $product->getMorphClass(),
         'attachable_id' => $product->getKey(),

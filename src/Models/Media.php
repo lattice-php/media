@@ -5,6 +5,7 @@ namespace Lattice\Media\Models;
 
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -30,6 +31,8 @@ class Media extends Model
 {
     /** @use HasFactory<MediaFactory> */
     use HasFactory;
+
+    use HasUuids;
 
     /** Mime types Intervention can decode: `image/svg+xml` is an image but not one of them. */
     private const array CONVERTIBLE_MIME_TYPES = [

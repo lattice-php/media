@@ -45,6 +45,6 @@ final class DeleteMediaAction extends ActionDefinition
 
     private function media(Request $request): Media
     {
-        return Media::modelQuery()->findOrFail($request->integer('media_id'));
+        return Media::modelQuery()->findOrFail($request->string('media_id')->toString());
     }
 }

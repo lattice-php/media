@@ -3,21 +3,22 @@ declare(strict_types=1);
 
 namespace Lattice\Media\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphPivot;
 use Illuminate\Support\Carbon;
 
 /**
- * @property int $id
+ * @property string $id
  * @property array<string, mixed>|null $meta
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
 final class Attachment extends MorphPivot
 {
-    protected $table = 'media_attachments';
+    use HasUuids;
 
-    public $incrementing = true;
+    protected $table = 'media_attachments';
 
     /**
      * @return BelongsTo<Media, $this>
