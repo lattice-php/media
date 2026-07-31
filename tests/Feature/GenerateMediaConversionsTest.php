@@ -71,7 +71,7 @@ test('the default thumb conversion is generated and recorded', function (): void
 
     expect($media->width)->toBe(600)
         ->and($media->height)->toBe(400)
-        ->and($media->generated_conversions['thumb'] ?? null)
+        ->and($media->conversions()['thumb'] ?? null)
         ->toBe(['path' => 'media/conversions/source-thumb.webp', 'width' => 400, 'height' => 400])
         ->and(Storage::disk('public')->get('media/conversions/source-thumb.webp'))->toStartWith('RIFF');
 });
@@ -81,17 +81,17 @@ test('a non-convertible media is skipped without a conversion map', function ():
 
     (new GenerateMediaConversions($media))->handle();
 
-    expect($media->refresh()->generated_conversions)->toBeNull()
+    expect($media->refresh()->meta)->toBeNull()
         ->and(Storage::disk('public')->allFiles())->toBe([]);
 });
 
 test('a media with every conversion and its dimensions recorded never reads the source', function (): void {
     $media = storedImage();
-    $media->update([
-        'generated_conversions' => ['thumb' => ['path' => 'x.webp', 'width' => 1, 'height' => 1]],
+    $media->update(['meta' => [
+        'conversions' => ['thumb' => ['path' => 'x.webp', 'width' => 1, 'height' => 1]],
         'width' => 320,
         'height' => 200,
-    ]);
+    ]]);
     unreadableDisk();
 
     (new GenerateMediaConversions($media))->handle();
@@ -102,14 +102,14 @@ test('a media with every conversion and its dimensions recorded never reads the 
 test('a complete map with no recorded dimensions is probed without touching the map', function (): void {
     $media = storedImage(600, 400);
     $map = ['thumb' => ['path' => 'media/conversions/source-thumb.webp', 'width' => 400, 'height' => 400]];
-    $media->update(['generated_conversions' => $map, 'width' => null, 'height' => null]);
+    $media->update(['meta' => ['conversions' => $map]]);
 
     (new GenerateMediaConversions($media))->handle();
     $media->refresh();
 
     expect($media->width)->toBe(600)
         ->and($media->height)->toBe(400)
-        ->and($media->generated_conversions)->toBe($map)
+        ->and($media->conversions())->toBe($map)
         ->and(Storage::disk('public')->allFiles())->toBe(['media/source.jpg']);
 });
 
@@ -142,7 +142,7 @@ test('a conversion that fails to return an image throws, keeping the derivatives
     $media->refresh();
 
     expect($media->conversionPath('ok'))->toStartWith('media/conversions/source-ok.')
-        ->and($media->generated_conversions['ok']['width'] ?? null)->toBe(50)
+        ->and($media->conversions()['ok']['width'] ?? null)->toBe(50)
         ->and($media->hasConversion('broken'))->toBeFalse()
         ->and(Storage::disk('public')->exists((string) $media->conversionPath('ok')))->toBeTrue()
         ->and($media->width)->toBe(600)
@@ -163,7 +163,7 @@ test('an image too large for the remaining memory is skipped with a warning', fu
         ini_set('memory_limit', $limit);
     }
 
-    expect($media->refresh()->generated_conversions)->toBeNull();
+    expect($media->refresh()->meta)->toBeNull();
 });
 
 test('a vanished source is logged instead of failing the job', function (): void {
@@ -172,7 +172,7 @@ test('a vanished source is logged instead of failing the job', function (): void
 
     (new GenerateMediaConversions($media))->handle();
 
-    expect($media->refresh()->generated_conversions)->toBeNull();
+    expect($media->refresh()->meta)->toBeNull();
 });
 
 test('a source that is not an image at all is logged instead of failing the job', function (): void {
@@ -182,7 +182,7 @@ test('a source that is not an image at all is logged instead of failing the job'
 
     (new GenerateMediaConversions($media))->handle();
 
-    expect($media->refresh()->generated_conversions)->toBeNull();
+    expect($media->refresh()->meta)->toBeNull();
 });
 
 test('a source whose real format is not the one its extension claims is skipped', function (): void {
@@ -196,7 +196,7 @@ test('a source whose real format is not the one its extension claims is skipped'
 
     (new GenerateMediaConversions($media))->handle();
 
-    expect($media->refresh()->generated_conversions)->toBeNull();
+    expect($media->refresh()->meta)->toBeNull();
 });
 
 test('a source the driver cannot decode is logged instead of failing the job', function (): void {
@@ -207,7 +207,7 @@ test('a source the driver cannot decode is logged instead of failing the job', f
     (new GenerateMediaConversions($media))->handle();
     $media->refresh();
 
-    expect($media->generated_conversions)->toBe([])
+    expect($media->conversions())->toBe([])
         ->and($media->width)->toBe(600)
         ->and($media->height)->toBe(400);
 });

@@ -33,7 +33,7 @@ test('the media table serializes rows with url, name and usage count', function 
 test('the row payload previews the generated derivative next to the original', function (): void {
     $media = Media::factory()->create([
         'path' => 'media/hero.jpg',
-        'generated_conversions' => ['thumb' => ['path' => 'media/conversions/hero-thumb.webp', 'width' => 400, 'height' => 400]],
+        'meta' => ['conversions' => ['thumb' => ['path' => 'media/conversions/hero-thumb.webp', 'width' => 400, 'height' => 400]]],
     ]);
 
     $ref = $this->latticeRef(wire(Table::use(MediaTable::class)));

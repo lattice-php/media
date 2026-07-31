@@ -19,9 +19,9 @@ use Throwable;
  * @property string $name
  * @property string $mime_type
  * @property int $size
- * @property int|null $width
- * @property int|null $height
- * @property array<string, array{path: string, width: int|null, height: int|null}>|null $generated_conversions
+ * @property array{width?: int, height?: int, conversions?: array<string, array{path: string, width: int, height: int}>}|null $meta
+ * @property-read int|null $width
+ * @property-read int|null $height
  * @property string|null $alt
  * @property int|null $uploaded_by
  */
@@ -44,7 +44,10 @@ class Media extends Model
     protected $guarded = [];
 
     /** @var list<string> */
-    protected $hidden = ['generated_conversions'];
+    protected $hidden = ['meta'];
+
+    /** @var list<string> */
+    protected $appends = ['width', 'height'];
 
     /**
      * The configured model class: consumers subclass `Media` and point
@@ -118,7 +121,7 @@ class Media extends Model
 
     public function conversionPath(string $name): ?string
     {
-        return $this->generated_conversions[$name]['path'] ?? null;
+        return $this->conversions()[$name]['path'] ?? null;
     }
 
     public function hasConversion(string $name): bool
@@ -127,11 +130,33 @@ class Media extends Model
     }
 
     /**
+     * The generated derivative map, keyed by conversion name.
+     *
+     * @return array<string, array{path: string, width: int, height: int}>
+     */
+    public function conversions(): array
+    {
+        return $this->meta['conversions'] ?? [];
+    }
+
+    /**
      * @return list<string>
      */
     public function conversionPaths(): array
     {
-        return array_column($this->generated_conversions ?? [], 'path');
+        return array_column($this->conversions(), 'path');
+    }
+
+    /**
+     * Merges into the existing `meta` payload instead of replacing it: a
+     * consumer may keep their own keys alongside the ones this package
+     * writes, and every write must leave them untouched.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    public function mergeMeta(array $attributes): bool
+    {
+        return $this->update(['meta' => [...($this->meta ?? []), ...$attributes]]);
     }
 
     public function isImage(): bool
@@ -184,7 +209,17 @@ class Media extends Model
     #[\Override]
     protected function casts(): array
     {
-        return ['generated_conversions' => 'array'];
+        return ['meta' => 'array'];
+    }
+
+    protected function getWidthAttribute(): ?int
+    {
+        return $this->meta['width'] ?? null;
+    }
+
+    protected function getHeightAttribute(): ?int
+    {
+        return $this->meta['height'] ?? null;
     }
 
     protected static function newFactory(): MediaFactory

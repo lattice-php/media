@@ -39,7 +39,7 @@ test('url serves a generated conversion and falls back to the original', functio
     Storage::fake('public');
     $media = Media::factory()->create([
         'path' => 'media/a.jpg',
-        'generated_conversions' => ['thumb' => ['path' => 'media/a-thumb.webp', 'width' => 400, 'height' => 400]],
+        'meta' => ['conversions' => ['thumb' => ['path' => 'media/a-thumb.webp', 'width' => 400, 'height' => 400]]],
     ]);
 
     expect($media->url('thumb'))->toContain('media/a-thumb.webp')
@@ -65,13 +65,15 @@ test('toArray exposes the preview url and dimensions', function (): void {
 
     $payload = Media::factory()->create([
         'path' => 'media/a.jpg',
-        'width' => 1200,
-        'height' => 800,
-        'generated_conversions' => ['thumb' => ['path' => 'media/a-thumb.webp', 'width' => 400, 'height' => 400]],
+        'meta' => [
+            'width' => 1200,
+            'height' => 800,
+            'conversions' => ['thumb' => ['path' => 'media/a-thumb.webp', 'width' => 400, 'height' => 400]],
+        ],
     ])->toArray();
 
     expect($payload)->toHaveKeys(['url', 'preview_url', 'width', 'height'])
-        ->and($payload)->not->toHaveKey('generated_conversions')
+        ->and($payload)->not->toHaveKey('meta')
         ->and($payload['preview_url'])->toContain('media/a-thumb.webp')
         ->and($payload['url'])->toContain('media/a.jpg')
         ->and($payload['width'])->toBe(1200)
@@ -113,10 +115,10 @@ test('deleting media removes every generated derivative', function (): void {
     Storage::fake('public');
     $media = Media::factory()->create([
         'path' => 'media/a.jpg',
-        'generated_conversions' => [
+        'meta' => ['conversions' => [
             'thumb' => ['path' => 'media/a-thumb.webp', 'width' => 400, 'height' => 400],
             'card' => ['path' => 'media/a-card.webp', 'width' => 800, 'height' => 600],
-        ],
+        ]],
     ]);
 
     foreach (['media/a.jpg', 'media/a-thumb.webp', 'media/a-card.webp'] as $path) {
@@ -145,4 +147,12 @@ test('attachments are cascaded even when the disk cannot be reached', function (
 
     expect(fn (): bool => (bool) $media->delete())->toThrow(RuntimeException::class)
         ->and(DB::table('media_attachments')->count())->toBe(0);
+});
+
+test('merging meta leaves a consumer-defined key untouched', function (): void {
+    $media = Media::factory()->create(['meta' => ['custom' => 'kept']]);
+
+    $media->mergeMeta(['width' => 100, 'height' => 100]);
+
+    expect($media->refresh()->meta)->toBe(['custom' => 'kept', 'width' => 100, 'height' => 100]);
 });

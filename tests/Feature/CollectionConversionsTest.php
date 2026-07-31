@@ -93,8 +93,8 @@ test("the collection's conversion is generated on top of the defaults", function
     (new GenerateMediaConversions($media, Product::factory()->create(), 'gallery'))->handle();
     $media->refresh();
 
-    expect(array_keys($media->generated_conversions ?? []))->toEqualCanonicalizing(['thumb', 'card'])
-        ->and($media->generated_conversions['card'] ?? null)
+    expect(array_keys($media->conversions()))->toEqualCanonicalizing(['thumb', 'card'])
+        ->and($media->conversions()['card'] ?? null)
         ->toBe(['path' => 'media/conversions/shot-card.webp', 'width' => 1200, 'height' => 800])
         ->and(Storage::disk('public')->exists((string) $media->conversionPath('thumb')))->toBeTrue()
         ->and(Storage::disk('public')->exists((string) $media->conversionPath('card')))->toBeTrue();
@@ -106,7 +106,7 @@ test('a bare string reuses the globally defined conversion of that name', functi
     (new GenerateMediaConversions($media, conversionProduct('legacy'), 'legacy'))->handle();
     $media->refresh();
 
-    expect(array_keys($media->generated_conversions ?? []))->toBe(['thumb'])
+    expect(array_keys($media->conversions()))->toBe(['thumb'])
         ->and(Storage::disk('public')->files('media/conversions'))->toHaveCount(1);
 });
 
@@ -124,11 +124,11 @@ test('two collections asking for the same conversion name produce one file and o
     $product = conversionProduct('shared');
 
     (new GenerateMediaConversions($media, $product, 'gallery'))->handle();
-    $generated = $media->refresh()->generated_conversions;
+    $generated = $media->refresh()->conversions();
 
     (new GenerateMediaConversions($media, $product, 'hero'))->handle();
 
-    expect($media->refresh()->generated_conversions)->toBe($generated)
+    expect($media->refresh()->conversions())->toBe($generated)
         ->and(Storage::disk('public')->files('media/conversions'))->toHaveCount(2);
 });
 

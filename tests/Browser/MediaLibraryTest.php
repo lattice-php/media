@@ -25,9 +25,9 @@ it('previews the generated derivative in the grid rather than the original', fun
     Media::factory()->create([
         'name' => 'hero.jpg',
         'path' => 'media/hero.jpg',
-        'generated_conversions' => [
+        'meta' => ['conversions' => [
             'thumb' => ['path' => 'media/conversions/hero-thumb.webp', 'width' => 400, 'height' => 400],
-        ],
+        ]],
     ]);
 
     $page = $this->visitAsWorkbenchUser('/media')->assertSee('hero.jpg');

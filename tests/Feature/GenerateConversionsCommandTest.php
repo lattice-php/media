@@ -46,7 +46,7 @@ test('a media that is not convertible is never queued', function (): void {
 
 test('force deletes the derivative it un-maps, so a renamed output leaves nothing behind', function (): void {
     $media = convertibleMedia();
-    $media->update(['generated_conversions' => [
+    $media->mergeMeta(['conversions' => [
         'thumb' => ['path' => 'media/conversions/source-thumb.jpg', 'width' => 400, 'height' => 400],
     ]]);
     Storage::disk('public')->put('media/conversions/source-thumb.jpg', 'stale');
@@ -78,8 +78,8 @@ test('only limits which conversions force drops and rebuilds', function (): void
     $media = convertibleMedia();
     artisan('media:conversions')->assertSuccessful();
 
-    $media->refresh()->update(['generated_conversions' => [
-        ...$media->generated_conversions,
+    $media->refresh()->mergeMeta(['conversions' => [
+        ...$media->conversions(),
         'square' => ['path' => 'media/conversions/stale.webp', 'width' => 1, 'height' => 1],
     ]]);
 
@@ -107,8 +107,8 @@ test('missing covers a complete map whose dimensions were never recorded', funct
     $media = convertibleMedia();
     artisan('media:conversions')->assertSuccessful();
     $media->refresh();
-    $map = $media->generated_conversions;
-    $media->update(['width' => null, 'height' => null]);
+    $map = $media->conversions();
+    $media->mergeMeta(['width' => null, 'height' => null]);
 
     artisan('media:conversions --missing')->assertSuccessful();
 
@@ -116,7 +116,7 @@ test('missing covers a complete map whose dimensions were never recorded', funct
 
     expect($media->width)->toBe(320)
         ->and($media->height)->toBe(200)
-        ->and($media->generated_conversions)->toBe($map);
+        ->and($media->conversions())->toBe($map);
 });
 
 test('a media whose stored mime is generic is still reached by the command', function (): void {

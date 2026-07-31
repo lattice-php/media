@@ -86,7 +86,7 @@ final class GenerateConversionsCommand extends Command
 
         $wanted = $names === [] ? array_keys($media->defaultConversions()) : $names;
 
-        return array_diff($wanted, array_keys($media->generated_conversions ?? [])) !== [];
+        return array_diff($wanted, array_keys($media->conversions())) !== [];
     }
 
     /**
@@ -99,7 +99,7 @@ final class GenerateConversionsCommand extends Command
      */
     private function dropTargeted(Media $media, array $names): void
     {
-        $generated = $media->generated_conversions ?? [];
+        $generated = $media->conversions();
         $forget = array_intersect_key($generated, array_flip($names === [] ? array_keys($generated) : $names));
 
         if ($forget === []) {
@@ -107,6 +107,6 @@ final class GenerateConversionsCommand extends Command
         }
 
         Storage::disk($media->disk)->delete(array_column($forget, 'path'));
-        $media->update(['generated_conversions' => array_diff_key($generated, $forget)]);
+        $media->mergeMeta(['conversions' => array_diff_key($generated, $forget)]);
     }
 }

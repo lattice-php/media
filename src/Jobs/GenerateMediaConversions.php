@@ -58,7 +58,7 @@ final class GenerateMediaConversions implements ShouldQueue
             return;
         }
 
-        $generated = $this->media->generated_conversions ?? [];
+        $generated = $this->media->conversions();
         $missing = array_diff_key($this->conversions(), $generated);
 
         // Nothing to generate still leaves the dimensions to record: a media
@@ -114,8 +114,8 @@ final class GenerateMediaConversions implements ShouldQueue
                 'reason' => $exception->getMessage(),
             ]);
         } finally {
-            $this->media->update([
-                'generated_conversions' => $generated,
+            $this->media->mergeMeta([
+                'conversions' => $generated,
                 'width' => $width,
                 'height' => $height,
             ]);
