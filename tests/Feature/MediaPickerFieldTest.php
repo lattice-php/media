@@ -96,6 +96,15 @@ test('attachmentFields serialize as template nodes next to the library', functio
     expect(array_column($node['schema'], 'type'))->toBe(['media.library', 'field.text-input']);
 });
 
+test('attachmentFields with string keys reindex to serialize as list', function (): void {
+    /** @phpstan-ignore-next-line argument.type — testing that string-keyed arrays are handled */
+    $node = wire(MediaPicker::make('gallery')->multiple()->attachmentFields([
+        'caption' => TextInput::make('caption', 'Caption'),
+    ]));
+
+    expect(array_column($node['schema'], 'type'))->toBe(['media.library', 'field.text-input']);
+});
+
 test('attachmentFields rejects a field named id', function (): void {
     MediaPicker::make('gallery')->attachmentFields([TextInput::make('id')]);
 })->throws(LogicException::class);

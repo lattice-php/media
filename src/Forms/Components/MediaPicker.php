@@ -72,8 +72,10 @@ class MediaPicker extends Field implements ProvidesRowFields
             }
         }
 
-        $this->attachmentFields = [...$this->attachmentFields, ...$fields];
-        $this->schema([...$this->children, ...$fields]);
+        /** @phpstan-ignore-next-line arrayValues.list — defensive against string-keyed arrays */
+        $this->attachmentFields = [...$this->attachmentFields, ...array_values($fields)];
+        /** @phpstan-ignore-next-line arrayValues.list — defensive against string-keyed arrays */
+        $this->schema([...$this->children, ...array_values($fields)]);
 
         return $this;
     }
