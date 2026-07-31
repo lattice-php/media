@@ -3,10 +3,12 @@ declare(strict_types=1);
 
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Lattice\Lattice\Facades\Lattice;
 use Lattice\Media\Actions\UploadMediaAction;
+use Lattice\Media\Jobs\GenerateMediaConversions;
 use Lattice\Media\Models\Media;
 
 use function Pest\Laravel\actingAs;
@@ -180,6 +182,86 @@ test('signs, uploads, and finalizes a key against rustfs end-to-end', function (
         Media::query()->where('disk', 's3')->delete();
     }
 })->group('rustfs');
+
+test('a signed upload ends with a real derivative object on s3', function (): void {
+    if (! rustfsIsReachable()) {
+        $this->markTestSkipped('RustFS/S3 is not reachable.');
+    }
+
+    $context = ['signed' => true, 'disk' => 's3'];
+    $tempKey = null;
+    $media = null;
+
+    try {
+        $signed = $this->callAction(UploadMediaAction::class, [
+            '_sub' => 'upload',
+            '_target' => 'files',
+            'filename' => 'photo.jpg',
+            'contentType' => 'image/jpeg',
+        ], $context)->assertOk()->json();
+
+        $tempKey = $signed['key'];
+
+        $put = Http::withHeaders([...$signed['headers'], 'Content-Type' => 'image/jpeg'])->send('PUT', $signed['url'], [
+            'body' => (string) UploadedFile::fake()->image('photo.jpg', 900, 600)->getContent(),
+        ]);
+
+        expect($put->successful())->toBeTrue();
+
+        // The queue is sync here, so finalizing runs the conversion job inline.
+        $this->callAction(UploadMediaAction::class, ['files' => [$tempKey]], $context)->assertOk();
+
+        $media = Media::query()->sole();
+        $derivative = $media->conversionPath('thumb');
+
+        expect($media->mime_type)->toBe('image/jpeg')
+            ->and($derivative)->not->toBeNull()
+            ->and($derivative)->toEndWith('-thumb.webp')
+            ->and(Storage::disk('s3')->exists((string) $derivative))->toBeTrue()
+            ->and(Storage::disk('s3')->get((string) $derivative))->toStartWith('RIFF')
+            ->and($media->width)->toBe(900)
+            ->and($media->height)->toBe(600);
+    } finally {
+        if ($tempKey !== null) {
+            Storage::disk('s3')->delete($tempKey);
+        }
+
+        $media?->delete();
+        Media::query()->where('disk', 's3')->delete();
+    }
+})->group('rustfs');
+
+test('multipart uploads queue their conversions', function (): void {
+    Bus::fake();
+
+    $this->callAction(UploadMediaAction::class, [
+        'files' => [UploadedFile::fake()->image('team.jpg')],
+    ])->assertOk();
+
+    $media = Media::query()->sole();
+
+    Bus::assertDispatchedTimes(GenerateMediaConversions::class, 1);
+    Bus::assertDispatched(
+        GenerateMediaConversions::class,
+        fn (GenerateMediaConversions $job): bool => $job->media->is($media) && $job->attachable === null,
+    );
+});
+
+test('signed uploads queue their conversions once finalized', function (): void {
+    Bus::fake();
+    config()->set('media.signed_uploads', true);
+    Storage::disk('public')->put('tmp/abc123.jpg', 'bytes');
+
+    $this->callAction(UploadMediaAction::class, ['files' => ['tmp/abc123.jpg']])->assertOk();
+
+    $media = Media::query()->sole();
+
+    Bus::assertDispatchedTimes(GenerateMediaConversions::class, 1);
+    Bus::assertDispatched(
+        GenerateMediaConversions::class,
+        fn (GenerateMediaConversions $job): bool => $job->media->is($media),
+    );
+});
 
 test('guests cannot upload', function (): void {
     auth()->logout();

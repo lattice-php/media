@@ -29,7 +29,7 @@ final class UpdateMediaAction extends FormActionDefinition
     public function authorize(Request $request): bool
     {
         if (! $request->filled('media_id')) {
-            return Gate::allows('viewAny', Media::class);
+            return Gate::allows('viewAny', Media::modelClass());
         }
 
         return Gate::allows('update', $this->media($request));
@@ -48,7 +48,8 @@ final class UpdateMediaAction extends FormActionDefinition
         $media = $this->media($request);
         $data = $this->validate($request);
 
-        $media->update(['name' => $data['name'], 'alt' => $data['alt'] ?? null]);
+        $media->update(['name' => $data['name']]);
+        $media->mergeMeta(['alt' => $data['alt'] ?? null]);
 
         return ActionResult::success(['id' => $media->getKey()])
             ->toast(__('media::media.actions.update.toast'), Variant::Success)
@@ -57,6 +58,6 @@ final class UpdateMediaAction extends FormActionDefinition
 
     private function media(Request $request): Media
     {
-        return Media::query()->findOrFail($request->integer('media_id'));
+        return Media::modelQuery()->findOrFail($request->integer('media_id'));
     }
 }

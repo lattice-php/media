@@ -30,6 +30,7 @@ return [
     ],
     'columns' => [
         'preview' => 'Preview',
+        'original' => 'Original file',
         'name' => 'Name',
         'type' => 'Type',
         'size' => 'Size',

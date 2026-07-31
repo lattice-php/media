@@ -5,7 +5,9 @@ namespace Lattice\Media\Actions;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Lattice\Lattice\Actions\ActionResult;
 use Lattice\Lattice\Actions\Components\Action;
@@ -15,6 +17,7 @@ use Lattice\Lattice\Forms\Components\FileUpload;
 use Lattice\Lattice\Forms\Components\Form;
 use Lattice\Lattice\Ui\Enums\HttpMethod;
 use Lattice\Lattice\Ui\Enums\Variant;
+use Lattice\Media\Jobs\GenerateMediaConversions;
 use Lattice\Media\Models\Media;
 
 #[AsAction('media.upload')]
@@ -30,12 +33,34 @@ final class UploadMediaAction extends FormActionDefinition
     #[\Override]
     public function authorize(Request $request): bool
     {
-        return Gate::allows('create', Media::class);
+        return Gate::allows('create', Media::modelClass());
     }
 
     public function formSchema(Form $form, Request $request): Form
     {
         return $form->schema([$this->field()]);
+    }
+
+    /**
+     * The per-file rules sealed by the library instance run in their own pass:
+     * Laravel's file rules only accept a file instance, while the field's own
+     * rule bag validates the `files` array. Signed uploads submit temporary
+     * keys rather than files, so nothing is checked there — `dimensions` and
+     * friends are multipart-only.
+     *
+     * @return array<string, mixed>
+     */
+    #[\Override]
+    public function validate(Request $request): array
+    {
+        $validated = parent::validate($request);
+        $rules = array_values(array_filter((array) $this->context('upload_rules', []), is_string(...)));
+
+        if ($rules !== []) {
+            Validator::make(['files' => Arr::wrap($request->file('files', []))], ['files.*' => $rules])->validate();
+        }
+
+        return $validated;
     }
 
     public function handle(Request $request): ActionResult
@@ -98,7 +123,7 @@ final class UploadMediaAction extends FormActionDefinition
                 $field->resolveDisk(),
             );
 
-            $stored[] = Media::query()->create([
+            $stored[] = Media::modelQuery()->create([
                 'disk' => $field->resolveDisk(),
                 'path' => $path,
                 'name' => $file->getClientOriginalName(),
@@ -114,7 +139,7 @@ final class UploadMediaAction extends FormActionDefinition
                 fn (string $key, array $metadata): string => 'media/'.Str::uuid()->toString()
                     .($metadata['extension'] !== '' ? '.'.$metadata['extension'] : ''),
             ) as $upload) {
-                $stored[] = Media::query()->create([
+                $stored[] = Media::modelQuery()->create([
                     'disk' => $upload['disk'],
                     'path' => $upload['path'],
                     'name' => $upload['name'],
@@ -123,6 +148,10 @@ final class UploadMediaAction extends FormActionDefinition
                     'uploaded_by' => auth()->id(),
                 ]);
             }
+        }
+
+        foreach ($stored as $media) {
+            GenerateMediaConversions::dispatch($media);
         }
 
         return $stored;

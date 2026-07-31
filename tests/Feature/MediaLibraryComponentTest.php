@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Lattice\Lattice\Facades\Lattice;
 use Lattice\Media\Actions\DeleteMediaAction;
 use Lattice\Media\Actions\UpdateMediaAction;
@@ -122,6 +123,62 @@ test('an instance accept tolerates spaces between the mime patterns', function (
     )->assertOk();
 
     expect(Media::query()->sole()->name)->toBe('report.pdf');
+});
+
+test('instance upload rules reject a file that violates them', function (): void {
+    Storage::fake('public');
+
+    $upload = uploadNode(wire(MediaLibrary::make()->uploadRules(['dimensions:max_width=50'])));
+
+    $this->postJson(
+        $upload['props']['endpoint'],
+        ['files' => [UploadedFile::fake()->image('wide.jpg', 400, 100)]],
+        $this->latticeHeaders($upload),
+    )->assertStatus(422)->assertJsonValidationErrors('files.0');
+
+    expect(Media::query()->count())->toBe(0);
+
+    $this->postJson(
+        $upload['props']['endpoint'],
+        ['files' => [UploadedFile::fake()->image('small.jpg', 40, 40)]],
+        $this->latticeHeaders($upload),
+    )->assertOk();
+
+    expect(Media::query()->sole()->name)->toBe('small.jpg');
+});
+
+test('upload rules survive the sealed context as strings and keep resealing after a render', function (): void {
+    Storage::fake('public');
+
+    $library = MediaLibrary::make();
+    wire($library);
+
+    $upload = uploadNode(wire($library->uploadRules([Rule::dimensions()->maxWidth(50)])));
+
+    $this->postJson(
+        $upload['props']['endpoint'],
+        ['files' => [UploadedFile::fake()->image('wide.jpg', 400, 100)]],
+        $this->latticeHeaders($upload),
+    )->assertStatus(422);
+
+    expect(Media::query()->count())->toBe(0);
+});
+
+test('signed uploads cannot enforce dimension rules because the server never sees the bytes', function (): void {
+    Storage::fake('public');
+    Storage::disk('public')->put('tmp/photo.jpg', 'bytes');
+
+    $upload = uploadNode(wire(
+        MediaLibrary::make()->signedUpload()->uploadRules(['dimensions:max_width=50']),
+    ));
+
+    $this->postJson(
+        $upload['props']['endpoint'],
+        ['files' => ['tmp/photo.jpg']],
+        $this->latticeHeaders($upload),
+    )->assertOk();
+
+    expect(Media::query()->count())->toBe(1);
 });
 
 test('an instance accept narrows what the upload endpoint takes', function (): void {

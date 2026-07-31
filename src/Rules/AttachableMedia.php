@@ -13,7 +13,7 @@ final class AttachableMedia implements ValidationRule
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         $id = filter_var($value, FILTER_VALIDATE_INT);
-        $media = $id === false ? null : Media::query()->find($id);
+        $media = $id === false ? null : Media::modelQuery()->find($id);
 
         if (! $media instanceof Media || Gate::denies('attach', $media)) {
             $fail(__('media::media.validation.not-attachable'));

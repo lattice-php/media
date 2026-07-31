@@ -12,7 +12,12 @@ use Lattice\Media\Models\Media;
  */
 final class MediaFactory extends Factory
 {
-    protected $model = Media::class;
+    /** @return class-string<Media> */
+    #[\Override]
+    public function modelName(): string
+    {
+        return Media::modelClass();
+    }
 
     /** @return array<string, mixed> */
     public function definition(): array

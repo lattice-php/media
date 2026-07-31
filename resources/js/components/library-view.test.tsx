@@ -30,6 +30,7 @@ function row(id: number) {
   return {
     id,
     url: null,
+    preview_url: null,
     name: `file-${id}.jpg`,
     mime_type: "image/jpeg",
     size: 100,

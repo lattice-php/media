@@ -24,6 +24,8 @@ const SEARCH_DEBOUNCE_MS = 300;
 export type MediaRow = {
   id: number;
   url: string | null;
+  /** The library conversion when it was generated, the original otherwise. */
+  preview_url: string | null;
   name: string;
   mime_type: string;
   size: number;
@@ -255,11 +257,11 @@ export function LibraryView({ node, pick }: { node: Node; pick?: PickMode }) {
                 onClick={() => (pick ? toggle(row) : setDetailId(row.id))}
                 type="button"
               >
-                {row.url !== null && row.mime_type.startsWith("image/") ? (
+                {row.preview_url !== null && row.mime_type.startsWith("image/") ? (
                   <img
                     alt={row.alt ?? row.name}
                     className="aspect-square w-full object-cover"
-                    src={row.url}
+                    src={row.preview_url}
                   />
                 ) : (
                   <span className="flex aspect-square w-full items-center justify-center text-sm text-lt-muted-fg">

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('mime_type')->index();
             $table->unsignedBigInteger('size');
-            $table->string('alt')->nullable();
+            $table->json('meta')->nullable();
             $table->unsignedBigInteger('uploaded_by')->nullable()->index();
             $table->timestamps();
             $table->unique(['disk', 'path']);
