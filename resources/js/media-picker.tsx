@@ -103,7 +103,7 @@ const MediaPickerComponent: RendererComponent<"field.media-picker"> = ({ node })
                       )}
                     </div>
 
-                    {hasFields && !locked && (
+                    {hasFields && !disabled && (
                       <FieldScopeProvider
                         base={name}
                         index={index}

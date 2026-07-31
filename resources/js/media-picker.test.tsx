@@ -241,4 +241,38 @@ describe("MediaPickerComponent", () => {
     expect(container.querySelector('input[type="hidden"][name="cover[0][id]"]')).toHaveValue("7");
     expect(screen.getByTestId("caption-input")).toHaveValue("Front");
   });
+
+  it("keeps submitting per-item template fields when the picker is read only", () => {
+    renderPicker(
+      {
+        name: "gallery",
+        multiple: true,
+        readOnly: true,
+        selected: [
+          { id: 7, name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: { caption: "Front" } },
+        ],
+      },
+      captionTemplate(),
+    );
+
+    const input = screen.getByTestId("caption-input");
+    expect(input).toHaveAttribute("name", "gallery[0][caption]");
+    expect(input).toHaveValue("Front");
+  });
+
+  it("omits per-item template fields when the picker is disabled", () => {
+    renderPicker(
+      {
+        name: "gallery",
+        multiple: true,
+        disabled: true,
+        selected: [
+          { id: 7, name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: { caption: "Front" } },
+        ],
+      },
+      captionTemplate(),
+    );
+
+    expect(screen.queryByTestId("caption-input")).toBeNull();
+  });
 });
