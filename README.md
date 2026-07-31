@@ -10,7 +10,7 @@ and a form field that attaches media to any model through a polymorphic pivot.
 composer require lattice-php/media
 ```
 
-Requires `@lattice-php/lattice` `^0.29`.
+Requires `lattice-php/lattice` `^0.29`.
 
 On the PHP side there is nothing to wire: the classes, migrations, config (`config/media.php`), and
 the default `Media` policy are picked up automatically. The React renderer ships as source and
