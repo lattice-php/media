@@ -71,7 +71,7 @@ final class MediaTable extends EloquentTableDefinition
     #[\Override]
     public function authorize(Request $request): bool
     {
-        return Gate::allows('viewAny', Media::class);
+        return Gate::allows('viewAny', Media::modelClass());
     }
 
     /**
@@ -79,7 +79,7 @@ final class MediaTable extends EloquentTableDefinition
      */
     public function builder(TableQuery $query): Builder
     {
-        $builder = Media::query()->withCount('attachments');
+        $builder = Media::modelQuery()->withCount('attachments');
 
         if ($query->sorts === []) {
             $builder->latest('id');

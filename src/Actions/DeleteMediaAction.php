@@ -28,7 +28,7 @@ final class DeleteMediaAction extends ActionDefinition
     public function authorize(Request $request): bool
     {
         if (! $request->filled('media_id')) {
-            return Gate::allows('viewAny', Media::class);
+            return Gate::allows('viewAny', Media::modelClass());
         }
 
         return Gate::allows('delete', $this->media($request));
@@ -45,6 +45,6 @@ final class DeleteMediaAction extends ActionDefinition
 
     private function media(Request $request): Media
     {
-        return Media::query()->findOrFail($request->integer('media_id'));
+        return Media::modelQuery()->findOrFail($request->integer('media_id'));
     }
 }

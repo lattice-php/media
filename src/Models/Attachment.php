@@ -17,6 +17,6 @@ final class Attachment extends MorphPivot
      */
     public function media(): BelongsTo
     {
-        return $this->belongsTo(Media::class);
+        return $this->belongsTo(Media::modelClass(), 'media_id');
     }
 }

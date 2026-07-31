@@ -56,7 +56,7 @@ class MediaPicker extends Field
     public function hydrateState(mixed $value, ?FormData $form = null, ?Request $request = null): void
     {
         $ids = array_values(array_filter(is_array($value) ? $value : [$value], is_numeric(...)));
-        $media = Media::query()->findMany($ids)->keyBy(fn (Media $row): int => (int) $row->getKey());
+        $media = Media::modelQuery()->findMany($ids)->keyBy(fn (Media $row): int => (int) $row->getKey());
 
         $this->selected = collect($ids)
             ->map(fn (mixed $id): ?Media => $media->get((int) $id))

@@ -3,9 +3,12 @@ declare(strict_types=1);
 
 namespace Lattice\Media\Models;
 
+use Closure;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Image\Image;
 use Illuminate\Support\Facades\Storage;
 use Lattice\Media\Database\Factories\MediaFactory;
 use Throwable;
@@ -16,24 +19,63 @@ use Throwable;
  * @property string $name
  * @property string $mime_type
  * @property int $size
+ * @property int|null $width
+ * @property int|null $height
+ * @property array<string, array{path: string, width: int|null, height: int|null}>|null $generated_conversions
  * @property string|null $alt
  * @property int|null $uploaded_by
  */
-final class Media extends Model
+class Media extends Model
 {
     /** @use HasFactory<MediaFactory> */
     use HasFactory;
 
+    /** Mime types Intervention can decode: `image/svg+xml` is an image but not one of them. */
+    private const array CONVERTIBLE_MIME_TYPES = [
+        'image/jpeg',
+        'image/png',
+        'image/bmp',
+        'image/gif',
+        'image/webp',
+    ];
+
     protected $table = 'media';
 
     protected $guarded = [];
+
+    /** @var list<string> */
+    protected $hidden = ['generated_conversions'];
+
+    /**
+     * The configured model class: consumers subclass `Media` and point
+     * `media.model` at their class to override the conversion defaults.
+     * An FQCN that is not a `Media` degrades to this class.
+     *
+     * @return class-string<self>
+     */
+    public static function modelClass(): string
+    {
+        $class = config('media.model');
+
+        return is_string($class) && is_a($class, self::class, true) ? $class : self::class;
+    }
+
+    /**
+     * @return Builder<self>
+     */
+    public static function modelQuery(): Builder
+    {
+        $class = self::modelClass();
+
+        return $class::query();
+    }
 
     #[\Override]
     protected static function booted(): void
     {
         self::deleted(function (Media $media): void {
             $media->attachments()->delete();
-            Storage::disk($media->disk)->delete($media->path);
+            Storage::disk($media->disk)->delete([$media->path, ...$media->conversionPaths()]);
         });
     }
 
@@ -42,28 +84,58 @@ final class Media extends Model
      */
     public function attachments(): HasMany
     {
-        return $this->hasMany(Attachment::class);
+        return $this->hasMany(Attachment::class, 'media_id');
     }
 
-    public function url(): ?string
+    /**
+     * Derivatives generated for every convertible media, keyed by name.
+     *
+     * Callbacks receive an immutable `Image` and must return the transformed
+     * image. Names are a global namespace: one name is one spec everywhere.
+     *
+     * @return array<string, Closure(Image): Image>
+     */
+    public function defaultConversions(): array
     {
-        $disk = Storage::disk($this->disk);
+        return [
+            'thumb' => fn (Image $image): Image => $image->cover(400, 400)->optimize('webp', 70),
+        ];
+    }
 
-        try {
-            return $disk->temporaryUrl($this->path, now()->addMinutes((int) config('lattice.files.url_ttl', 5)));
-        } catch (Throwable) {
-        }
+    /** Falls back to the original whenever the conversion was never generated. */
+    public function url(?string $conversion = null): ?string
+    {
+        $path = $conversion === null ? null : $this->conversionPath($conversion);
 
-        try {
-            return $disk->url($this->path);
-        } catch (Throwable) {
-            return null;
-        }
+        return $this->pathUrl($path ?? $this->path);
+    }
+
+    public function conversionPath(string $name): ?string
+    {
+        return $this->generated_conversions[$name]['path'] ?? null;
+    }
+
+    public function hasConversion(string $name): bool
+    {
+        return $this->conversionPath($name) !== null;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function conversionPaths(): array
+    {
+        return array_column($this->generated_conversions ?? [], 'path');
     }
 
     public function isImage(): bool
     {
         return str_starts_with($this->mime_type, 'image/');
+    }
+
+    public function isConvertible(): bool
+    {
+        return in_array($this->mime_type, self::CONVERTIBLE_MIME_TYPES, true);
     }
 
     /**
@@ -72,11 +144,40 @@ final class Media extends Model
     #[\Override]
     public function toArray(): array
     {
-        return [...parent::toArray(), 'url' => $this->url()];
+        return [
+            ...parent::toArray(),
+            'url' => $this->url(),
+            'preview_url' => $this->url((string) config('media.library_conversion', 'thumb')),
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    #[\Override]
+    protected function casts(): array
+    {
+        return ['generated_conversions' => 'array'];
     }
 
     protected static function newFactory(): MediaFactory
     {
         return MediaFactory::new();
+    }
+
+    private function pathUrl(string $path): ?string
+    {
+        $disk = Storage::disk($this->disk);
+
+        try {
+            return $disk->temporaryUrl($path, now()->addMinutes((int) config('lattice.files.url_ttl', 5)));
+        } catch (Throwable) {
+        }
+
+        try {
+            return $disk->url($path);
+        } catch (Throwable) {
+            return null;
+        }
     }
 }

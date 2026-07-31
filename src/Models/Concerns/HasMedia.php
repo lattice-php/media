@@ -14,7 +14,7 @@ trait HasMedia
      */
     public function media(string $collection = 'default'): MorphToMany
     {
-        return $this->morphToMany(Media::class, 'attachable', 'media_attachments')
+        return $this->morphToMany(Media::modelClass(), 'attachable', 'media_attachments', null, 'media_id')
             ->using(Attachment::class)
             ->wherePivot('collection', $collection)
             ->withPivot(['collection', 'sort_order'])

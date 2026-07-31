@@ -30,7 +30,7 @@ final class UploadMediaAction extends FormActionDefinition
     #[\Override]
     public function authorize(Request $request): bool
     {
-        return Gate::allows('create', Media::class);
+        return Gate::allows('create', Media::modelClass());
     }
 
     public function formSchema(Form $form, Request $request): Form
@@ -98,7 +98,7 @@ final class UploadMediaAction extends FormActionDefinition
                 $field->resolveDisk(),
             );
 
-            $stored[] = Media::query()->create([
+            $stored[] = Media::modelQuery()->create([
                 'disk' => $field->resolveDisk(),
                 'path' => $path,
                 'name' => $file->getClientOriginalName(),
@@ -114,7 +114,7 @@ final class UploadMediaAction extends FormActionDefinition
                 fn (string $key, array $metadata): string => 'media/'.Str::uuid()->toString()
                     .($metadata['extension'] !== '' ? '.'.$metadata['extension'] : ''),
             ) as $upload) {
-                $stored[] = Media::query()->create([
+                $stored[] = Media::modelQuery()->create([
                     'disk' => $upload['disk'],
                     'path' => $upload['path'],
                     'name' => $upload['name'],
