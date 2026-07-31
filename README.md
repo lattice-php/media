@@ -36,7 +36,9 @@ use Lattice\Media\Forms\Components\MediaPicker;
 MediaPicker::make('gallery')->multiple();
 ```
 
-**The `HasMedia` trait** — per-collection attachments on any model:
+**The `HasMedia` trait** — per-collection attachments on any model. Attachable models must use uuid
+primary keys (`$table->uuid('id')->primary()` and `HasUuids`), since the pivot's `attachable_id`
+column is a `uuidMorphs`:
 
 ```php
 use Lattice\Media\Models\Concerns\HasMedia;
@@ -166,11 +168,8 @@ use Lattice\Media\Models\Media;
 Media::resolveTenantUsing(fn () => auth()->user()?->tenant_id);
 ```
 
-Add the tenant column to the `media` table yourself (the package does not migrate it):
-
-```php
-$table->string('tenant_id')->nullable()->index();
-```
+The base migration ships a nullable indexed `tenant_id` string column; use the `column` parameter to
+point at a different one you add yourself.
 
 When the resolver returns `null`, media queries run unscoped — use this in console contexts or for central libraries. To override the column name, pass the `column` parameter:
 
