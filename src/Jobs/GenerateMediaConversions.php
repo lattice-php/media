@@ -139,6 +139,10 @@ final class GenerateMediaConversions implements ShouldQueue
 
         $path = $this->derivativePath($name, $image->extension());
 
+        if ($path === $this->media->path) {
+            throw new RuntimeException("The [{$name}] media conversion would overwrite the original at [{$path}].");
+        }
+
         if ($image->storeAs($path, null, $this->media->disk) === false) {
             throw new RuntimeException("Storing the [{$name}] media conversion at [{$path}] failed.");
         }
@@ -185,9 +189,11 @@ final class GenerateMediaConversions implements ShouldQueue
     private function derivativePath(string $name, string $extension): string
     {
         $directory = dirname($this->media->path);
-        $file = pathinfo($this->media->path, PATHINFO_FILENAME)."-{$name}.{$extension}";
 
-        return ($directory === '.' ? '' : "{$directory}/")."conversions/{$file}";
+        // Bare conversion names are collision-safe only because every media owns
+        // its directory (media/{tenant}/{uuid}/original.*); rows created outside
+        // the upload action must follow the same layout.
+        return ($directory === '.' ? '' : "{$directory}/")."{$name}.{$extension}";
     }
 
     /**

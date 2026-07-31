@@ -30,7 +30,7 @@ class MediaPicker extends Field implements ProvidesRowFields
      * Existing attachments surfaced on edit as display descriptors; `values`
      * holds the row's attachment-field values.
      *
-     * @var list<array{id: int, name: string, url: string|null, preview_url: string|null, mime_type: string, values: array<string, mixed>}>|null
+     * @var list<array{id: string, name: string, url: string|null, preview_url: string|null, mime_type: string, values: array<string, mixed>}>|null
      */
     public ?array $selected = null;
 
@@ -162,20 +162,20 @@ class MediaPicker extends Field implements ProvidesRowFields
     public function hydrateState(mixed $value, ?FormData $form = null, ?Request $request = null): void
     {
         $rows = $this->rowsOf($value);
-        $ids = array_values(array_filter(array_column($rows, 'id'), is_numeric(...)));
-        $media = Media::modelQuery()->findMany($ids)->keyBy(fn (Media $row): int => (int) $row->getKey());
+        $ids = array_values(array_filter(array_column($rows, 'id'), fn (mixed $id): bool => is_string($id) && $id !== ''));
+        $media = Media::modelQuery()->findMany($ids)->keyBy(fn (Media $row): string => (string) $row->getKey());
 
         $this->selected = collect($rows)
             ->map(function (array $row) use ($media): ?array {
                 $id = $row['id'] ?? null;
-                $item = is_numeric($id) ? $media->get((int) $id) : null;
+                $item = is_string($id) && $id !== '' ? $media->get($id) : null;
 
                 if ($item === null) {
                     return null;
                 }
 
                 return [
-                    'id' => (int) $item->getKey(),
+                    'id' => (string) $item->getKey(),
                     'name' => $item->name,
                     'url' => $item->url(),
                     'preview_url' => $item->previewUrl(),
@@ -202,7 +202,7 @@ class MediaPicker extends Field implements ProvidesRowFields
         }
 
         if (! $this->multiple) {
-            return ['nullable', 'integer', new AttachableMedia];
+            return ['nullable', 'uuid', new AttachableMedia];
         }
 
         return $this->maxFiles === null
@@ -218,7 +218,7 @@ class MediaPicker extends Field implements ProvidesRowFields
     {
         if ($this->attachmentFields === []) {
             return $this->multiple
-                ? ["{$this->name()}.*" => ['integer', new AttachableMedia]]
+                ? ["{$this->name()}.*" => ['uuid', new AttachableMedia]]
                 : [];
         }
 
@@ -226,7 +226,7 @@ class MediaPicker extends Field implements ProvidesRowFields
 
         foreach ($this->rowsOf($data->get($this->name())) as $index => $row) {
             $scope = $this->rowScope($data, $row);
-            $rules["{$this->name()}.{$index}.id"] = ['required', 'integer', new AttachableMedia];
+            $rules["{$this->name()}.{$index}.id"] = ['required', 'uuid', new AttachableMedia];
 
             foreach ($this->attachmentFields as $field) {
                 if (! $field->isVisible($scope)) {
@@ -252,7 +252,7 @@ class MediaPicker extends Field implements ProvidesRowFields
         }
 
         $rows = array_map(function (array $row): array {
-            $cast = ['id' => (int) ($row['id'] ?? 0)];
+            $cast = ['id' => (string) ($row['id'] ?? '')];
 
             foreach ($this->attachmentFields as $field) {
                 $cast[$field->name()] = $field->castValue($row[$field->name()] ?? null);

@@ -49,7 +49,7 @@ trait HasMedia
      * Accepts plain media ids or picker rows: an array entry must carry an
      * `id` key and every other key is written into the attachment's meta.
      *
-     * @param  array<int, int|string|array<string, mixed>>  $media
+     * @param  array<int, string|array<string, mixed>>  $media
      */
     public function syncMedia(array $media, string $collection = 'default'): void
     {
@@ -59,7 +59,7 @@ trait HasMedia
             $row = is_array($entry) ? $entry : ['id' => $entry];
             $meta = array_diff_key($row, ['id' => true]);
 
-            $sync[(int) $row['id']] = [
+            $sync[(string) $row['id']] = [
                 'collection' => $collection,
                 'sort_order' => $index + 1,
                 'meta' => $meta === [] ? null : $meta,
@@ -85,7 +85,7 @@ trait HasMedia
                 /** @var Attachment $attachment */
                 $attachment = $media->pivot;
 
-                return ['id' => (int) $media->getKey(), ...($attachment->meta ?? [])];
+                return ['id' => (string) $media->getKey(), ...($attachment->meta ?? [])];
             })
             ->all();
     }

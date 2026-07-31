@@ -22,7 +22,7 @@ import { useMediaUpload } from "./use-media-upload";
 const SEARCH_DEBOUNCE_MS = 300;
 
 export type MediaRow = {
-  id: number;
+  id: string;
   url: string | null;
   /** The library conversion when it was generated, the original otherwise. */
   preview_url: string | null;
@@ -66,7 +66,7 @@ export function LibraryView({ node, pick }: { node: Node; pick?: PickMode }) {
   });
   const fileInput = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
-  const [detailId, setDetailId] = useState<number | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
   const detailRow = rows.find((row) => row.id === detailId) ?? null;
   // Pick-mode composition never passes these action nodes, and defensively they
   // could be absent even outside pick mode — in either case there is no panel to

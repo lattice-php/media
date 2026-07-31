@@ -10,7 +10,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('media', function (Blueprint $table): void {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('disk')->index();
             $table->string('path');
             $table->string('name');
@@ -18,6 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('size');
             $table->json('meta')->nullable();
             $table->unsignedBigInteger('uploaded_by')->nullable()->index();
+            $table->string('tenant_id')->nullable()->index();
             $table->timestamps();
             $table->unique(['disk', 'path']);
         });

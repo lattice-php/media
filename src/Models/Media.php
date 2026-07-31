@@ -5,6 +5,7 @@ namespace Lattice\Media\Models;
 
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -31,6 +32,8 @@ class Media extends Model
     /** @use HasFactory<MediaFactory> */
     use HasFactory;
 
+    use HasUuids;
+
     /** Mime types Intervention can decode: `image/svg+xml` is an image but not one of them. */
     private const array CONVERTIBLE_MIME_TYPES = [
         'image/jpeg',
@@ -39,6 +42,10 @@ class Media extends Model
         'image/gif',
         'image/webp',
     ];
+
+    private static ?Closure $tenantResolver = null;
+
+    private static string $tenantColumn = 'tenant_id';
 
     protected $table = 'media';
 
@@ -74,9 +81,48 @@ class Media extends Model
         return $class::query();
     }
 
+    /**
+     * One resolver drives all tenancy: a query-time global scope, the
+     * creating stamp, and the upload path prefix. Null (from a missing
+     * resolver or a null return) means unscoped. Pass null to clear.
+     */
+    public static function resolveTenantUsing(?Closure $resolver, string $column = 'tenant_id'): void
+    {
+        self::$tenantResolver = $resolver;
+        self::$tenantColumn = $column;
+    }
+
+    public static function tenantValue(): int|string|null
+    {
+        $value = self::$tenantResolver === null ? null : (self::$tenantResolver)();
+
+        return is_int($value) || is_string($value) ? $value : null;
+    }
+
+    public static function tenantColumn(): string
+    {
+        return self::$tenantColumn;
+    }
+
     #[\Override]
     protected static function booted(): void
     {
+        static::addGlobalScope('media-tenant', function (Builder $builder): void {
+            $tenant = self::tenantValue();
+
+            if ($tenant !== null) {
+                $builder->where($builder->qualifyColumn(self::tenantColumn()), $tenant);
+            }
+        });
+
+        static::creating(function (Media $media): void {
+            $tenant = self::tenantValue();
+
+            if ($tenant !== null && $media->getAttribute(self::tenantColumn()) === null) {
+                $media->setAttribute(self::tenantColumn(), $tenant);
+            }
+        });
+
         self::deleted(function (Media $media): void {
             $media->attachments()->delete();
             Storage::disk($media->disk)->delete([$media->path, ...$media->conversionPaths()]);

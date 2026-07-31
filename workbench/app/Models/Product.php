@@ -5,6 +5,7 @@ namespace Workbench\App\Models;
 
 use Closure;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
@@ -25,6 +26,7 @@ class Product extends Model
     use HasFactory;
 
     use HasMedia;
+    use HasUuids;
 
     /** @var list<string> */
     protected $fillable = ['name'];

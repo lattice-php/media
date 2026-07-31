@@ -17,9 +17,11 @@ beforeEach(function (): void {
 
 function convertibleMedia(string $name = 'source.jpg'): Media
 {
-    Storage::disk('public')->put("media/{$name}", (string) UploadedFile::fake()->image($name, 320, 200)->getContent());
+    $path = 'media/'.pathinfo($name, PATHINFO_FILENAME).'/original.'.pathinfo($name, PATHINFO_EXTENSION);
 
-    return Media::factory()->create(['path' => "media/{$name}", 'mime_type' => 'image/jpeg']);
+    Storage::disk('public')->put($path, (string) UploadedFile::fake()->image($name, 320, 200)->getContent());
+
+    return Media::factory()->create(['path' => $path, 'mime_type' => 'image/jpeg']);
 }
 
 test('the command backfills a media that never had its conversions generated', function (): void {
@@ -29,14 +31,14 @@ test('the command backfills a media that never had its conversions generated', f
 
     $media->refresh();
 
-    expect($media->conversionPath('thumb'))->toBe('media/conversions/source-thumb.webp')
-        ->and(Storage::disk('public')->exists('media/conversions/source-thumb.webp'))->toBeTrue()
+    expect($media->conversionPath('thumb'))->toBe('media/source/thumb.webp')
+        ->and(Storage::disk('public')->exists('media/source/thumb.webp'))->toBeTrue()
         ->and($media->width)->toBe(320)
         ->and($media->height)->toBe(200);
 });
 
 test('a media that is not convertible is never queued', function (): void {
-    Media::factory()->create(['path' => 'media/logo.svg', 'mime_type' => 'image/svg+xml']);
+    Media::factory()->create(['path' => 'media/logo/original.svg', 'mime_type' => 'image/svg+xml']);
     Bus::fake();
 
     artisan('media:conversions')->assertSuccessful();
@@ -47,30 +49,30 @@ test('a media that is not convertible is never queued', function (): void {
 test('force deletes the derivative it un-maps, so a renamed output leaves nothing behind', function (): void {
     $media = convertibleMedia();
     $media->mergeMeta(['conversions' => [
-        'thumb' => ['path' => 'media/conversions/source-thumb.jpg', 'width' => 400, 'height' => 400],
+        'thumb' => ['path' => 'media/source/thumb.jpg', 'width' => 400, 'height' => 400],
     ]]);
-    Storage::disk('public')->put('media/conversions/source-thumb.jpg', 'stale');
+    Storage::disk('public')->put('media/source/thumb.jpg', 'stale');
 
     artisan('media:conversions --force')->assertSuccessful();
 
-    expect(Storage::disk('public')->exists('media/conversions/source-thumb.jpg'))->toBeFalse()
-        ->and($media->refresh()->conversionPath('thumb'))->toBe('media/conversions/source-thumb.webp')
-        ->and(Storage::disk('public')->exists('media/conversions/source-thumb.webp'))->toBeTrue();
+    expect(Storage::disk('public')->exists('media/source/thumb.jpg'))->toBeFalse()
+        ->and($media->refresh()->conversionPath('thumb'))->toBe('media/source/thumb.webp')
+        ->and(Storage::disk('public')->exists('media/source/thumb.webp'))->toBeTrue();
 });
 
 test('force regenerates a derivative whose file was removed behind the map', function (): void {
     $media = convertibleMedia();
     artisan('media:conversions')->assertSuccessful();
 
-    Storage::disk('public')->delete('media/conversions/source-thumb.webp');
+    Storage::disk('public')->delete('media/source/thumb.webp');
 
     artisan('media:conversions')->assertSuccessful();
-    expect(Storage::disk('public')->exists('media/conversions/source-thumb.webp'))->toBeFalse();
+    expect(Storage::disk('public')->exists('media/source/thumb.webp'))->toBeFalse();
 
     artisan('media:conversions --force')->assertSuccessful();
 
-    expect(Storage::disk('public')->exists('media/conversions/source-thumb.webp'))->toBeTrue()
-        ->and($media->refresh()->conversionPath('thumb'))->toBe('media/conversions/source-thumb.webp');
+    expect(Storage::disk('public')->exists('media/source/thumb.webp'))->toBeTrue()
+        ->and($media->refresh()->conversionPath('thumb'))->toBe('media/source/thumb.webp');
 });
 
 test('only limits which conversions force drops and rebuilds', function (): void {
@@ -80,14 +82,14 @@ test('only limits which conversions force drops and rebuilds', function (): void
 
     $media->refresh()->mergeMeta(['conversions' => [
         ...$media->conversions(),
-        'square' => ['path' => 'media/conversions/stale.webp', 'width' => 1, 'height' => 1],
+        'square' => ['path' => 'media/source/stale.webp', 'width' => 1, 'height' => 1],
     ]]);
 
     artisan('media:conversions --force --only=thumb')->assertSuccessful();
 
-    expect($media->refresh()->conversionPath('square'))->toBe('media/conversions/stale.webp')
-        ->and($media->conversionPath('thumb'))->toBe('media/conversions/source-thumb.webp')
-        ->and(Storage::disk('public')->exists('media/conversions/source-thumb.webp'))->toBeTrue();
+    expect($media->refresh()->conversionPath('square'))->toBe('media/source/stale.webp')
+        ->and($media->conversionPath('thumb'))->toBe('media/source/thumb.webp')
+        ->and(Storage::disk('public')->exists('media/source/thumb.webp'))->toBeTrue();
 });
 
 test('missing skips a media whose conversions are all present', function (): void {
@@ -125,7 +127,7 @@ test('a media whose stored mime is generic is still reached by the command', fun
 
     artisan('media:conversions')->assertSuccessful();
 
-    expect($media->refresh()->conversionPath('thumb'))->toBe('media/conversions/source-thumb.webp');
+    expect($media->refresh()->conversionPath('thumb'))->toBe('media/source/thumb.webp');
 });
 
 test('ids narrow the run to the given media', function (): void {

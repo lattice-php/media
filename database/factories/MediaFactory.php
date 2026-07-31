@@ -26,7 +26,7 @@ final class MediaFactory extends Factory
 
         return [
             'disk' => 'public',
-            'path' => 'media/'.Str::uuid()->toString().'.jpg',
+            'path' => 'media/'.Str::uuid()->toString().'/original.jpg',
             'name' => $name,
             'mime_type' => 'image/jpeg',
             'size' => $this->faker->numberBetween(1_000, 500_000),
@@ -38,7 +38,7 @@ final class MediaFactory extends Factory
         return $this->state(fn (): array => [
             'mime_type' => 'application/pdf',
             'name' => $this->faker->unique()->word().'.pdf',
-            'path' => 'media/'.Str::uuid()->toString().'.pdf',
+            'path' => 'media/'.Str::uuid()->toString().'/original.pdf',
         ]);
     }
 }

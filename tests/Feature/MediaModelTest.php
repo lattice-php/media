@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Lattice\Media\Models\Media;
 
 test('url falls back from temporary url to public url', function (): void {
@@ -97,9 +98,10 @@ test('deleting media removes the disk object and cascades attachments', function
     Storage::disk('public')->put($media->path, 'bytes');
 
     DB::table('media_attachments')->insert([
+        'id' => Str::uuid()->toString(),
         'media_id' => $media->getKey(),
         'attachable_type' => 'demo',
-        'attachable_id' => 1,
+        'attachable_id' => Str::uuid()->toString(),
         'collection' => 'default',
         'sort_order' => 1,
     ]);
@@ -135,9 +137,10 @@ test('attachments are cascaded even when the disk cannot be reached', function (
     $media = Media::factory()->create();
 
     DB::table('media_attachments')->insert([
+        'id' => Str::uuid()->toString(),
         'media_id' => $media->getKey(),
         'attachable_type' => 'demo',
-        'attachable_id' => 1,
+        'attachable_id' => Str::uuid()->toString(),
         'collection' => 'default',
         'sort_order' => 1,
     ]);

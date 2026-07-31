@@ -10,7 +10,7 @@ import { IconButton } from "@lattice-php/lattice/ui/icon-button";
 import { LibraryView, type MediaRow } from "./components/library-view";
 
 type Picked = {
-  id: number;
+  id: string;
   name: string;
   url: string | null;
   preview_url: string | null;

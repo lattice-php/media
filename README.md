@@ -36,7 +36,9 @@ use Lattice\Media\Forms\Components\MediaPicker;
 MediaPicker::make('gallery')->multiple();
 ```
 
-**The `HasMedia` trait** — per-collection attachments on any model:
+**The `HasMedia` trait** — per-collection attachments on any model. Attachable models must use uuid
+primary keys (`$table->uuid('id')->primary()` and `HasUuids`), since the pivot's `attachable_id`
+column is a `uuidMorphs`:
 
 ```php
 use Lattice\Media\Models\Concerns\HasMedia;
@@ -51,7 +53,8 @@ $product->media('gallery');             // MorphToMany<Media>, ordered by the pi
 $product->firstMediaUrl('gallery');
 ```
 
-Validate submitted ids with `Lattice\Media\Rules\AttachableMedia`.
+Validate submitted ids with `Lattice\Media\Rules\AttachableMedia`; the HTTP path is guarded by this rule
+automatically, but a direct `syncMedia()` call from your own code must validate the ids itself.
 
 ## Conversions
 
@@ -106,6 +109,9 @@ throws, and because the job resolves all the names before it generates anything,
 *every* conversion for that collection — including the ones that were fine — and burns all three
 attempts. Verify a new name in a queue worker's log before shipping it.
 
+The name `original` is reserved for the source file itself: a conversion may never overwrite it, and
+the job throws rather than silently clobber the upload.
+
 Nothing fingerprints a callback, so an edited one is not picked up on its own:
 
 ```bash
@@ -151,6 +157,27 @@ A single library overrides the config defaults per instance:
 ```php
 MediaLibrary::make()->signedUpload()->disk('s3')->accept('image/*');
 ```
+
+## Multi-tenancy
+
+Register a tenant resolver in a service provider to scope every media query, stamp new rows, and prefix storage paths per tenant:
+
+```php
+use Lattice\Media\Models\Media;
+
+Media::resolveTenantUsing(fn () => auth()->user()?->tenant_id);
+```
+
+The base migration ships a nullable indexed `tenant_id` string column; use the `column` parameter to
+point at a different one you add yourself.
+
+When the resolver returns `null`, media queries run unscoped — use this in console contexts or for central libraries. To override the column name, pass the `column` parameter:
+
+```php
+Media::resolveTenantUsing(fn () => auth()->user()?->account_id, column: 'account_id');
+```
+
+Storage is prefixed per tenant: `media/{tenant}/{uuid}/original.{ext}`, with conversions beside the original (`media/{tenant}/{uuid}/thumb.webp`).
 
 ## Translations
 

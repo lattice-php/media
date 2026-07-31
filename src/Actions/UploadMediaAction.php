@@ -19,6 +19,7 @@ use Lattice\Lattice\Ui\Enums\HttpMethod;
 use Lattice\Lattice\Ui\Enums\Variant;
 use Lattice\Media\Jobs\GenerateMediaConversions;
 use Lattice\Media\Models\Media;
+use RuntimeException;
 
 #[AsAction('media.upload')]
 final class UploadMediaAction extends FormActionDefinition
@@ -104,6 +105,31 @@ final class UploadMediaAction extends FormActionDefinition
         return $field;
     }
 
+    private function mediaDirectory(): string
+    {
+        $tenant = Media::tenantValue();
+
+        if ($tenant !== null) {
+            $tenant = (string) $tenant;
+
+            if (str_contains($tenant, '/') || str_contains($tenant, '\\') || str_contains($tenant, '..')) {
+                throw new RuntimeException("The tenant value [{$tenant}] must not contain path separators.");
+            }
+        }
+
+        return 'media/'.($tenant === null ? '' : "{$tenant}/").Str::uuid()->toString();
+    }
+
+    private function extensionSuffix(string $extension): string
+    {
+        return $extension === '' ? '' : ".{$extension}";
+    }
+
+    private function signedUploadName(string $path): string
+    {
+        return basename(dirname($path)).$this->extensionSuffix(pathinfo($path, PATHINFO_EXTENSION));
+    }
+
     /**
      * @return list<Media>
      */
@@ -118,8 +144,8 @@ final class UploadMediaAction extends FormActionDefinition
 
         foreach ($uploadedFiles as $file) {
             $path = $file->storeAs(
-                'media',
-                Str::uuid()->toString().'.'.$file->getClientOriginalExtension(),
+                $this->mediaDirectory(),
+                'original'.$this->extensionSuffix($file->getClientOriginalExtension()),
                 $field->resolveDisk(),
             );
 
@@ -136,13 +162,13 @@ final class UploadMediaAction extends FormActionDefinition
         if ($signedKeys !== []) {
             foreach ($field->finalizeSignedUploads(
                 $signedKeys,
-                fn (string $key, array $metadata): string => 'media/'.Str::uuid()->toString()
-                    .($metadata['extension'] !== '' ? '.'.$metadata['extension'] : ''),
+                fn (string $key, array $metadata): string => $this->mediaDirectory().'/original'
+                    .$this->extensionSuffix((string) $metadata['extension']),
             ) as $upload) {
                 $stored[] = Media::modelQuery()->create([
                     'disk' => $upload['disk'],
                     'path' => $upload['path'],
-                    'name' => $upload['name'],
+                    'name' => $this->signedUploadName($upload['path']),
                     'mime_type' => $upload['mime_type'] ?? 'application/octet-stream',
                     'size' => $upload['size'] ?? 0,
                     'uploaded_by' => auth()->id(),

@@ -24,15 +24,15 @@ it('renders the media grid and narrows it through the search box', function (): 
 it('previews the generated derivative in the grid rather than the original', function (): void {
     Media::factory()->create([
         'name' => 'hero.jpg',
-        'path' => 'media/hero.jpg',
+        'path' => 'media/hero/original.jpg',
         'meta' => ['conversions' => [
-            'thumb' => ['path' => 'media/conversions/hero-thumb.webp', 'width' => 400, 'height' => 400],
+            'thumb' => ['path' => 'media/hero/thumb.webp', 'width' => 400, 'height' => 400],
         ]],
     ]);
 
     $page = $this->visitAsWorkbenchUser('/media')->assertSee('hero.jpg');
 
-    $page->assertAttributeContains('[data-test="media-card"] img', 'src', 'media/conversions/hero-thumb.webp')
+    $page->assertAttributeContains('[data-test="media-card"] img', 'src', 'media/hero/thumb.webp')
         ->assertNoSmoke();
 });
 

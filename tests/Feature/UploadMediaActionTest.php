@@ -30,6 +30,7 @@ test('multipart uploads create media rows on the configured disk', function (): 
         ->and($media->disk)->toBe('public')
         ->and($media->mime_type)->toBe('image/jpeg')
         ->and($media->uploaded_by)->toBe(auth()->id())
+        ->and($media->path)->toMatch('#^media/[0-9a-f-]{36}/original\.jpg$#')
         ->and(Storage::disk('public')->exists($media->path))->toBeTrue();
 });
 
@@ -58,7 +59,8 @@ test('signed temp keys are finalized out of the temp prefix', function (): void 
 
     $media = Media::query()->sole();
 
-    expect($media->path)->toStartWith('media/')
+    expect($media->path)->toMatch('#^media/[0-9a-f-]{36}/original\.jpg$#')
+        ->and($media->name)->toMatch('#^[0-9a-f-]{36}\.jpg$#')
         ->and(Storage::disk('public')->exists($media->path))->toBeTrue()
         ->and(Storage::disk('public')->exists('tmp/abc123.jpg'))->toBeFalse();
 });
@@ -77,7 +79,7 @@ test('a sealed context overrides the configured signed flag and disk', function 
     $media = Media::query()->sole();
 
     expect($media->disk)->toBe('uploads')
-        ->and($media->path)->toStartWith('media/')
+        ->and($media->path)->toMatch('#^media/[0-9a-f-]{36}/original\.jpg$#')
         ->and(Storage::disk('uploads')->exists($media->path))->toBeTrue()
         ->and(Storage::disk('uploads')->exists('tmp/abc123.jpg'))->toBeFalse();
 });
@@ -216,7 +218,7 @@ test('a signed upload ends with a real derivative object on s3', function (): vo
 
         expect($media->mime_type)->toBe('image/jpeg')
             ->and($derivative)->not->toBeNull()
-            ->and($derivative)->toEndWith('-thumb.webp')
+            ->and($derivative)->toEndWith('/thumb.webp')
             ->and(Storage::disk('s3')->exists((string) $derivative))->toBeTrue()
             ->and(Storage::disk('s3')->get((string) $derivative))->toStartWith('RIFF')
             ->and($media->width)->toBe(900)

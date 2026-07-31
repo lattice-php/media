@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Lattice\Lattice\Facades\Lattice;
 use Lattice\Lattice\Forms\Components\TextInput;
 use Lattice\Lattice\Forms\FormData;
@@ -39,7 +40,7 @@ test('hydrateState drops ids that no longer exist', function (): void {
     $media = Media::factory()->create();
 
     $field = MediaPicker::make('gallery')->multiple();
-    $field->hydrateState([$media->getKey(), 999999]);
+    $field->hydrateState([$media->getKey(), Str::uuid()->toString()]);
 
     expect(array_column($field->selected, 'id'))->toBe([$media->getKey()]);
 });
@@ -62,7 +63,7 @@ test('the attachable rule rejects unknown ids and accepts existing media', funct
     $media = Media::factory()->create();
 
     expect($fails($media->getKey()))->toBeFalse()
-        ->and($fails(999999))->toBeTrue()
+        ->and($fails(Str::uuid()->toString()))->toBeTrue()
         ->and($fails('not-an-id'))->toBeTrue()
         ->and($fails($media->getKey().'.5'))->toBeTrue();
 });
@@ -82,7 +83,7 @@ test('a form with a media picker rejects an id that is not attachable', function
     $product = Product::factory()->create();
 
     $this->submitForm(ProductMediaForm::class, [
-        'gallery' => [['id' => 999999]],
+        'gallery' => [['id' => Str::uuid()->toString()]],
     ], ['product_id' => $product->getKey()])->assertInvalid(['gallery.0.id']);
 
     expect($product->media('gallery')->count())->toBe(0);
@@ -117,7 +118,7 @@ test('rows are validated per index against id and each attachment field', functi
 
     $data = FormData::make(['gallery' => [
         ['id' => $media->getKey(), 'caption' => 'ok'],
-        ['id' => 999999, 'caption' => 'far too long for the rule'],
+        ['id' => Str::uuid()->toString(), 'caption' => 'far too long for the rule'],
     ]]);
 
     $validator = Validator::make($data->all(), [
@@ -136,9 +137,10 @@ test('castValue casts rows and unwraps single mode', function (): void {
 
     $multiple = MediaPicker::make('gallery')->multiple()->attachmentFields($fields);
     $single = MediaPicker::make('cover')->attachmentFields($fields);
+    $uuid = Str::uuid()->toString();
 
-    expect($multiple->castValue([['id' => '5', 'caption' => 'x']]))->toBe([['id' => 5, 'caption' => 'x']])
-        ->and($single->castValue([['id' => '5', 'caption' => 'x']]))->toBe(['id' => 5, 'caption' => 'x'])
+    expect($multiple->castValue([['id' => $uuid, 'caption' => 'x']]))->toBe([['id' => $uuid, 'caption' => 'x']])
+        ->and($single->castValue([['id' => $uuid, 'caption' => 'x']]))->toBe(['id' => $uuid, 'caption' => 'x'])
         ->and($single->castValue([]))->toBeNull();
 });
 

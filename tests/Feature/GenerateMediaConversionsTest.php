@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Lattice\Media\Jobs\GenerateMediaConversions;
 use Lattice\Media\Models\Media;
+use Lattice\Media\Tests\Fixtures\OriginalOverwriteMedia;
 use Lattice\Media\Tests\Fixtures\PartialConversionMedia;
 
 /** A fake disk swallows write failures into `false`; a skipped branch ten lines later would not say so. */
@@ -18,9 +19,9 @@ function writeToDisk(string $path, string $contents): void
 
 function storedImage(int $width = 320, int $height = 200): Media
 {
-    writeToDisk('media/source.jpg', (string) UploadedFile::fake()->image('source.jpg', $width, $height)->getContent());
+    writeToDisk('media/source/original.jpg', (string) UploadedFile::fake()->image('source.jpg', $width, $height)->getContent());
 
-    return Media::factory()->create(['path' => 'media/source.jpg', 'mime_type' => 'image/jpeg']);
+    return Media::factory()->create(['path' => 'media/source/original.jpg', 'mime_type' => 'image/jpeg']);
 }
 
 /**
@@ -72,12 +73,12 @@ test('the default thumb conversion is generated and recorded', function (): void
     expect($media->width)->toBe(600)
         ->and($media->height)->toBe(400)
         ->and($media->conversions()['thumb'] ?? null)
-        ->toBe(['path' => 'media/conversions/source-thumb.webp', 'width' => 400, 'height' => 400])
-        ->and(Storage::disk('public')->get('media/conversions/source-thumb.webp'))->toStartWith('RIFF');
+        ->toBe(['path' => 'media/source/thumb.webp', 'width' => 400, 'height' => 400])
+        ->and(Storage::disk('public')->get('media/source/thumb.webp'))->toStartWith('RIFF');
 });
 
 test('a non-convertible media is skipped without a conversion map', function (): void {
-    $media = Media::factory()->create(['path' => 'media/logo.svg', 'mime_type' => 'image/svg+xml']);
+    $media = Media::factory()->create(['path' => 'media/logo/original.svg', 'mime_type' => 'image/svg+xml']);
 
     (new GenerateMediaConversions($media))->handle();
 
@@ -101,7 +102,7 @@ test('a media with every conversion and its dimensions recorded never reads the 
 
 test('a complete map with no recorded dimensions is probed without touching the map', function (): void {
     $media = storedImage(600, 400);
-    $map = ['thumb' => ['path' => 'media/conversions/source-thumb.webp', 'width' => 400, 'height' => 400]];
+    $map = ['thumb' => ['path' => 'media/source/thumb.webp', 'width' => 400, 'height' => 400]];
     $media->update(['meta' => ['conversions' => $map]]);
 
     (new GenerateMediaConversions($media))->handle();
@@ -110,7 +111,7 @@ test('a complete map with no recorded dimensions is probed without touching the 
     expect($media->width)->toBe(600)
         ->and($media->height)->toBe(400)
         ->and($media->conversions())->toBe($map)
-        ->and(Storage::disk('public')->allFiles())->toBe(['media/source.jpg']);
+        ->and(Storage::disk('public')->allFiles())->toBe(['media/source/original.jpg']);
 });
 
 test('a media stored under a generic mime is still probed', function (): void {
@@ -119,7 +120,7 @@ test('a media stored under a generic mime is still probed', function (): void {
 
     (new GenerateMediaConversions($media))->handle();
 
-    expect($media->refresh()->conversionPath('thumb'))->toBe('media/conversions/source-thumb.webp');
+    expect($media->refresh()->conversionPath('thumb'))->toBe('media/source/thumb.webp');
 });
 
 test('a missing conversion does read the source', function (): void {
@@ -141,7 +142,7 @@ test('a conversion that fails to return an image throws, keeping the derivatives
 
     $media->refresh();
 
-    expect($media->conversionPath('ok'))->toStartWith('media/conversions/source-ok.')
+    expect($media->conversionPath('ok'))->toStartWith('media/source/ok.')
         ->and($media->conversions()['ok']['width'] ?? null)->toBe(50)
         ->and($media->hasConversion('broken'))->toBeFalse()
         ->and(Storage::disk('public')->exists((string) $media->conversionPath('ok')))->toBeTrue()
@@ -149,9 +150,21 @@ test('a conversion that fails to return an image throws, keeping the derivatives
         ->and($media->height)->toBe(400);
 });
 
+test('a conversion named original refuses to overwrite the source', function (): void {
+    config()->set('media.model', OriginalOverwriteMedia::class);
+    $media = storedImage(600, 400);
+    $bytes = Storage::disk('public')->get($media->path);
+
+    expect(function () use ($media): void {
+        (new GenerateMediaConversions($media))->handle();
+    })->toThrow(RuntimeException::class, 'The [original] media conversion would overwrite the original at [media/source/original.jpg].');
+
+    expect(Storage::disk('public')->get($media->path))->toBe($bytes);
+});
+
 test('an image too large for the remaining memory is skipped with a warning', function (): void {
-    writeToDisk('media/huge.png', pngHeader(40000, 40000));
-    $media = Media::factory()->create(['path' => 'media/huge.png', 'mime_type' => 'image/png']);
+    writeToDisk('media/huge/original.png', pngHeader(40000, 40000));
+    $media = Media::factory()->create(['path' => 'media/huge/original.png', 'mime_type' => 'image/png']);
     expectWarning('not enough memory');
 
     $limit = ini_get('memory_limit');
@@ -167,7 +180,7 @@ test('an image too large for the remaining memory is skipped with a warning', fu
 });
 
 test('a vanished source is logged instead of failing the job', function (): void {
-    $media = Media::factory()->create(['path' => 'media/gone.jpg']);
+    $media = Media::factory()->create(['path' => 'media/gone/original.jpg']);
     expectWarning('the source file is gone');
 
     (new GenerateMediaConversions($media))->handle();
@@ -176,8 +189,8 @@ test('a vanished source is logged instead of failing the job', function (): void
 });
 
 test('a source that is not an image at all is logged instead of failing the job', function (): void {
-    writeToDisk('media/lying.jpg', 'not an image');
-    $media = Media::factory()->create(['path' => 'media/lying.jpg']);
+    writeToDisk('media/lying/original.jpg', 'not an image');
+    $media = Media::factory()->create(['path' => 'media/lying/original.jpg']);
     expectWarning('not a convertible image');
 
     (new GenerateMediaConversions($media))->handle();
@@ -189,9 +202,9 @@ test('a source whose real format is not the one its extension claims is skipped'
     $image = imagecreatetruecolor(60, 40);
     ob_start();
     imagewbmp($image);
-    writeToDisk('media/mislabelled.jpg', (string) ob_get_clean());
+    writeToDisk('media/mislabelled/original.jpg', (string) ob_get_clean());
 
-    $media = Media::factory()->create(['path' => 'media/mislabelled.jpg', 'mime_type' => 'image/jpeg']);
+    $media = Media::factory()->create(['path' => 'media/mislabelled/original.jpg', 'mime_type' => 'image/jpeg']);
     expectWarning('not a convertible image');
 
     (new GenerateMediaConversions($media))->handle();
@@ -200,8 +213,8 @@ test('a source whose real format is not the one its extension claims is skipped'
 });
 
 test('a source the driver cannot decode is logged instead of failing the job', function (): void {
-    writeToDisk('media/corrupt.png', pngHeader(600, 400));
-    $media = Media::factory()->create(['path' => 'media/corrupt.png', 'mime_type' => 'image/png']);
+    writeToDisk('media/corrupt/original.png', pngHeader(600, 400));
+    $media = Media::factory()->create(['path' => 'media/corrupt/original.png', 'mime_type' => 'image/png']);
     expectWarning('could not process the source');
 
     (new GenerateMediaConversions($media))->handle();
