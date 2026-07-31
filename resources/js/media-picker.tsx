@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { RenderNode } from "@lattice-php/lattice/core";
 import type { RendererComponent } from "@lattice-php/lattice/core/types";
 import { SimpleField } from "@lattice-php/lattice/form/components/fields/simple-field";
+import { FieldScopeProvider } from "@lattice-php/lattice/form/hooks/field-scope";
 import { translate, useT } from "@lattice-php/lattice/i18n";
 import { Button } from "@lattice-php/lattice/ui/button";
 import { Dialog, DialogContent, DialogHeader } from "@lattice-php/lattice/ui/dialog";
@@ -13,14 +15,19 @@ type Picked = {
   url: string | null;
   preview_url: string | null;
   mime_type: string;
+  values: Record<string, unknown>;
 };
 
 const MediaPickerComponent: RendererComponent<"field.media-picker"> = ({ node }) => {
   const { t } = useT("media");
   const props = node.props;
   const [open, setOpen] = useState(false);
-  const [picked, setPicked] = useState<Picked[]>(props.selected ?? []);
+  const [picked, setPicked] = useState<Picked[]>(
+    (props.selected ?? []).map((entry) => ({ ...entry, values: entry.values ?? {} })),
+  );
   const libraryNode = node.schema?.find((child) => child.type === "media.library");
+  const template = node.schema?.filter((child) => child.type !== "media.library") ?? [];
+  const hasFields = template.length > 0;
   const multiple = props.multiple;
   const maxFiles = props.maxFiles;
   const remaining =
@@ -30,14 +37,34 @@ const MediaPickerComponent: RendererComponent<"field.media-picker"> = ({ node })
     <SimpleField label={props.label ?? ""} node={node}>
       {({ name, commit, disabled, readOnly }) => {
         const locked = disabled || readOnly;
+
+        const valueOf = (rows: Picked[]) =>
+          hasFields
+            ? rows.map((entry) => ({ id: entry.id, ...entry.values }))
+            : multiple
+              ? rows.map((entry) => entry.id)
+              : (rows[0]?.id ?? "");
+
         const apply = (next: Picked[]): void => {
           setPicked(next);
-          commit(multiple ? next.map((entry) => entry.id) : (next[0]?.id ?? ""));
+          commit(valueOf(next));
+        };
+
+        const setRowValue = (index: number, field: string, value: unknown): void => {
+          apply(
+            picked.map((row, i) =>
+              i === index ? { ...row, values: { ...row.values, [field]: value } } : row,
+            ),
+          );
         };
 
         return (
           <div className="flex flex-col gap-2" data-test={`media-picker-${name}`}>
-            {multiple ? (
+            {hasFields ? (
+              picked.map((item, index) => (
+                <input key={item.id} name={`${name}[${index}][id]`} type="hidden" value={item.id} />
+              ))
+            ) : multiple ? (
               picked.map((item) => (
                 <input key={item.id} name={`${name}[]`} type="hidden" value={item.id} />
               ))
@@ -46,28 +73,49 @@ const MediaPickerComponent: RendererComponent<"field.media-picker"> = ({ node })
             )}
 
             {picked.length > 0 && (
-              <ul className="flex flex-wrap gap-2">
-                {picked.map((item) => (
+              <ul className={hasFields ? "flex flex-col gap-2" : "flex flex-wrap gap-2"}>
+                {picked.map((item, index) => (
                   <li
-                    className="flex max-w-56 items-center gap-2 rounded-lt-sm border border-lt-border bg-lt-surface px-2 py-1 text-sm"
+                    className={
+                      hasFields
+                        ? "flex flex-col gap-3 rounded-lt-sm border border-lt-border bg-lt-surface px-2 py-2 text-sm"
+                        : "flex max-w-56 items-center gap-2 rounded-lt-sm border border-lt-border bg-lt-surface px-2 py-1 text-sm"
+                    }
                     data-test="media-picker-item"
                     key={item.id}
                   >
-                    {item.preview_url !== null && item.mime_type.startsWith("image/") && (
-                      <img
-                        alt=""
-                        className="size-8 rounded-lt-xs object-cover"
-                        src={item.preview_url}
-                      />
-                    )}
-                    <span className="truncate text-lt-fg">{item.name}</span>
-                    {!locked && (
-                      <IconButton
-                        data-test="media-picker-remove"
-                        icon="x"
-                        label={t("media.picker.remove", "Remove {{name}}", { name: item.name })}
-                        onClick={() => apply(picked.filter((entry) => entry.id !== item.id))}
-                      />
+                    <div className="flex items-center gap-2">
+                      {item.preview_url !== null && item.mime_type.startsWith("image/") && (
+                        <img
+                          alt=""
+                          className="size-8 rounded-lt-xs object-cover"
+                          src={item.preview_url}
+                        />
+                      )}
+                      <span className="truncate text-lt-fg">{item.name}</span>
+                      {!locked && (
+                        <IconButton
+                          data-test="media-picker-remove"
+                          icon="x"
+                          label={t("media.picker.remove", "Remove {{name}}", { name: item.name })}
+                          onClick={() => apply(picked.filter((entry) => entry.id !== item.id))}
+                        />
+                      )}
+                    </div>
+
+                    {hasFields && !disabled && (
+                      <FieldScopeProvider
+                        base={name}
+                        index={index}
+                        onChange={(field, value) => setRowValue(index, field, value)}
+                        row={{ id: item.id, ...item.values }}
+                      >
+                        <div className="flex flex-col gap-3" data-test="media-picker-item-fields">
+                          {template.map((child, childIndex) => (
+                            <RenderNode key={childIndex} node={child} />
+                          ))}
+                        </div>
+                      </FieldScopeProvider>
                     )}
                   </li>
                 ))}
@@ -102,14 +150,18 @@ const MediaPickerComponent: RendererComponent<"field.media-picker"> = ({ node })
                       multiple,
                       max: remaining,
                       onConfirm: (items: MediaRow[]) => {
+                        const incoming = items.map((item) => ({
+                          ...item,
+                          values: picked.find((entry) => entry.id === item.id)?.values ?? {},
+                        }));
                         const merged = multiple
                           ? [
                               ...picked.filter(
-                                (entry) => !items.some((item) => item.id === entry.id),
+                                (entry) => !incoming.some((item) => item.id === entry.id),
                               ),
-                              ...items,
+                              ...incoming,
                             ]
-                          : items.slice(0, 1);
+                          : incoming.slice(0, 1);
 
                         apply(
                           multiple && maxFiles !== null ? merged.slice(0, maxFiles) : merged,

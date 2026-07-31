@@ -1,8 +1,10 @@
 <?php
 declare(strict_types=1);
 
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Lattice\Media\Models\Attachment;
 use Lattice\Media\Models\Media;
 use Workbench\App\Models\Product;
 
@@ -62,4 +64,79 @@ test('firstMediaUrl returns the first attachment url or null', function (): void
     $product->syncMedia([$media->getKey()], 'images');
 
     expect($product->refresh()->firstMediaUrl('images'))->toContain($media->path);
+});
+
+test('attachments carry an id, timestamps and a cast meta payload', function (): void {
+    $product = Product::factory()->create();
+    $media = Media::factory()->create();
+
+    $product->syncMedia([$media->getKey()], 'images');
+
+    $row = DB::table('media_attachments')->sole();
+
+    expect($row->id)->toBeInt()
+        ->and($row->created_at)->not->toBeNull()
+        ->and($row->updated_at)->not->toBeNull()
+        ->and($row->meta)->toBeNull();
+
+    $attachment = Attachment::query()->sole();
+    $attachment->update(['meta' => ['caption' => 'hello']]);
+
+    expect(Attachment::query()->sole()->meta)->toBe(['caption' => 'hello'])
+        ->and($product->media('images')->first()->pivot->meta)->toBe(['caption' => 'hello']);
+});
+
+test('the same media cannot attach twice to one collection', function (): void {
+    $product = Product::factory()->create();
+    $media = Media::factory()->create();
+
+    $product->syncMedia([$media->getKey()], 'images');
+
+    DB::table('media_attachments')->insert([
+        'media_id' => $media->getKey(),
+        'attachable_type' => $product->getMorphClass(),
+        'attachable_id' => $product->getKey(),
+        'collection' => 'images',
+        'sort_order' => 2,
+    ]);
+})->throws(QueryException::class);
+
+test('syncMedia writes row meta into the attachment and null when absent', function (): void {
+    $product = Product::factory()->create();
+    [$a, $b] = Media::factory()->count(2)->create();
+
+    $product->syncMedia([
+        ['id' => $a->getKey(), 'caption' => 'Front view', 'featured' => true],
+        $b->getKey(),
+    ], 'images');
+
+    $meta = DB::table('media_attachments')->where('collection', 'images')->pluck('meta', 'media_id');
+
+    expect(json_decode((string) $meta[$a->getKey()], true))->toBe(['caption' => 'Front view', 'featured' => true])
+        ->and($meta[$b->getKey()])->toBeNull();
+});
+
+test('re-sync updates the meta of an existing attachment', function (): void {
+    $product = Product::factory()->create();
+    $media = Media::factory()->create();
+
+    $product->syncMedia([['id' => $media->getKey(), 'caption' => 'old']], 'images');
+    $product->syncMedia([['id' => $media->getKey(), 'caption' => 'new']], 'images');
+
+    expect(Attachment::query()->sole()->meta)->toBe(['caption' => 'new']);
+});
+
+test('mediaPickerValue returns ordered rows of id plus meta', function (): void {
+    $product = Product::factory()->create();
+    [$a, $b] = Media::factory()->count(2)->create();
+
+    $product->syncMedia([
+        ['id' => $b->getKey(), 'caption' => 'Back'],
+        $a->getKey(),
+    ], 'images');
+
+    expect($product->mediaPickerValue('images'))->toBe([
+        ['id' => $b->getKey(), 'caption' => 'Back'],
+        ['id' => $a->getKey()],
+    ]);
 });

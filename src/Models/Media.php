@@ -24,6 +24,7 @@ use Throwable;
  * @property-read int|null $height
  * @property-read string|null $alt
  * @property int|null $uploaded_by
+ * @property-read Attachment|null $pivot
  */
 class Media extends Model
 {

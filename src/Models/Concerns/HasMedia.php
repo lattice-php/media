@@ -19,8 +19,9 @@ trait HasMedia
     {
         return $this->morphToMany(Media::modelClass(), 'attachable', 'media_attachments', null, 'media_id')
             ->using(Attachment::class)
+            ->withPivot(['id', 'collection', 'sort_order', 'meta'])
+            ->withTimestamps()
             ->wherePivot('collection', $collection)
-            ->withPivot(['collection', 'sort_order'])
             ->orderByPivot('sort_order');
     }
 
@@ -45,21 +46,48 @@ trait HasMedia
     }
 
     /**
-     * @param  array<int, int|string>  $mediaIds
+     * Accepts plain media ids or picker rows: an array entry must carry an
+     * `id` key and every other key is written into the attachment's meta.
+     *
+     * @param  array<int, int|string|array<string, mixed>>  $media
      */
-    public function syncMedia(array $mediaIds, string $collection = 'default'): void
+    public function syncMedia(array $media, string $collection = 'default'): void
     {
         $sync = [];
 
-        foreach (array_values($mediaIds) as $index => $id) {
-            $sync[$id] = ['collection' => $collection, 'sort_order' => $index + 1];
+        foreach (array_values($media) as $index => $entry) {
+            $row = is_array($entry) ? $entry : ['id' => $entry];
+            $meta = array_diff_key($row, ['id' => true]);
+
+            $sync[(int) $row['id']] = [
+                'collection' => $collection,
+                'sort_order' => $index + 1,
+                'meta' => $meta === [] ? null : $meta,
+            ];
         }
 
         $attached = $this->media($collection)->sync($sync)['attached'];
 
-        foreach (Media::modelQuery()->findMany($attached) as $media) {
-            GenerateMediaConversions::dispatch($media, $this, $collection);
+        foreach (Media::modelQuery()->findMany($attached) as $mediaModel) {
+            GenerateMediaConversions::dispatch($mediaModel, $this, $collection);
         }
+    }
+
+    /**
+     * The stored attachments as picker rows (`[{id, ...meta}]`) for form prefill.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function mediaPickerValue(string $collection = 'default'): array
+    {
+        return $this->media($collection)->get()
+            ->map(function (Media $media): array {
+                /** @var Attachment $attachment */
+                $attachment = $media->pivot;
+
+                return ['id' => (int) $media->getKey(), ...($attachment->meta ?? [])];
+            })
+            ->all();
     }
 
     public function firstMediaUrl(string $collection = 'default'): ?string
