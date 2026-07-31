@@ -40,6 +40,10 @@ class Media extends Model
         'image/webp',
     ];
 
+    private static ?Closure $tenantResolver = null;
+
+    private static string $tenantColumn = 'tenant_id';
+
     protected $table = 'media';
 
     protected $guarded = [];
@@ -74,9 +78,48 @@ class Media extends Model
         return $class::query();
     }
 
+    /**
+     * One resolver drives all tenancy: a query-time global scope, the
+     * creating stamp, and the upload path prefix. Null (from a missing
+     * resolver or a null return) means unscoped. Pass null to clear.
+     */
+    public static function resolveTenantUsing(?Closure $resolver, string $column = 'tenant_id'): void
+    {
+        self::$tenantResolver = $resolver;
+        self::$tenantColumn = $column;
+    }
+
+    public static function tenantValue(): int|string|null
+    {
+        $value = self::$tenantResolver === null ? null : (self::$tenantResolver)();
+
+        return is_int($value) || is_string($value) ? $value : null;
+    }
+
+    public static function tenantColumn(): string
+    {
+        return self::$tenantColumn;
+    }
+
     #[\Override]
     protected static function booted(): void
     {
+        static::addGlobalScope('media-tenant', function (Builder $builder): void {
+            $tenant = self::tenantValue();
+
+            if ($tenant !== null) {
+                $builder->where($builder->qualifyColumn(self::tenantColumn()), $tenant);
+            }
+        });
+
+        static::creating(function (Media $media): void {
+            $tenant = self::tenantValue();
+
+            if ($tenant !== null && $media->getAttribute(self::tenantColumn()) === null) {
+                $media->setAttribute(self::tenantColumn(), $tenant);
+            }
+        });
+
         self::deleted(function (Media $media): void {
             $media->attachments()->delete();
             Storage::disk($media->disk)->delete([$media->path, ...$media->conversionPaths()]);
