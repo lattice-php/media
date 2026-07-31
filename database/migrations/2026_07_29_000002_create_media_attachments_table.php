@@ -10,11 +10,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('media_attachments', function (Blueprint $table): void {
+            $table->id();
             $table->foreignId('media_id')->constrained('media')->cascadeOnDelete();
             $table->morphs('attachable');
             $table->string('collection')->default('default');
             $table->unsignedSmallInteger('sort_order')->default(1);
-            $table->primary(['media_id', 'attachable_type', 'attachable_id', 'collection']);
+            $table->json('meta')->nullable();
+            $table->timestamps();
+            $table->unique(['media_id', 'attachable_type', 'attachable_id', 'collection'], 'media_attachments_unique');
             $table->index(['attachable_type', 'attachable_id', 'collection', 'sort_order']);
         });
     }
