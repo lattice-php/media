@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+use Illuminate\Support\Env;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Orchestra\Testbench\Factories\UserFactory;
@@ -57,6 +58,12 @@ function assertPresentEventually(AwaitableWebpage|PendingAwaitablePage|Webpage $
 
 function rustfsIsReachable(): bool
 {
+    // CI provisions RustFS itself, so never skip there — an unreachable disk
+    // must fail the suite loudly instead of passing green as "skipped".
+    if (Env::get('CI') !== null) {
+        return true;
+    }
+
     $key = 'lattice-test-probes/'.Str::uuid().'.txt';
 
     try {
