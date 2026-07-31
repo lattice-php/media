@@ -22,6 +22,7 @@ return [
             'fields' => [
                 'gallery' => 'Gallery',
                 'gallery-help-text' => 'Pick images from the media library.',
+                'caption' => 'Caption',
             ],
         ],
     ],

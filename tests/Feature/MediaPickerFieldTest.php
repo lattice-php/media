@@ -72,7 +72,7 @@ test('a form with a media picker syncs the pivot through HasMedia', function ():
     $media = Media::factory()->create();
 
     $this->submitForm(ProductMediaForm::class, [
-        'gallery' => [$media->getKey()],
+        'gallery' => [['id' => $media->getKey()]],
     ], ['product_id' => $product->getKey()])->assertRedirect('/media-picker');
 
     expect($product->media('gallery')->pluck('media.id')->all())->toBe([$media->getKey()]);
@@ -82,8 +82,8 @@ test('a form with a media picker rejects an id that is not attachable', function
     $product = Product::factory()->create();
 
     $this->submitForm(ProductMediaForm::class, [
-        'gallery' => [999999],
-    ], ['product_id' => $product->getKey()])->assertInvalid(['gallery.0']);
+        'gallery' => [['id' => 999999]],
+    ], ['product_id' => $product->getKey()])->assertInvalid(['gallery.0.id']);
 
     expect($product->media('gallery')->count())->toBe(0);
 });
