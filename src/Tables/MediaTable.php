@@ -14,7 +14,6 @@ use Lattice\Lattice\Tables\Columns\ImageColumn;
 use Lattice\Lattice\Tables\Columns\NumberColumn;
 use Lattice\Lattice\Tables\Columns\TextColumn;
 use Lattice\Lattice\Tables\Enums\PaginationType;
-use Lattice\Lattice\Tables\Filters\DateRangeFilter;
 use Lattice\Lattice\Tables\Filters\Filter;
 use Lattice\Lattice\Tables\Sources\Eloquent\EloquentTableDefinition;
 use Lattice\Lattice\Tables\TableQuery;
@@ -40,11 +39,11 @@ final class MediaTable extends EloquentTableDefinition
         return [
             ImageColumn::make('preview_url')->label(__('media::media.columns.preview'))->size(44),
             TextColumn::make('url')->label(__('media::media.columns.original'))->toggleable(hiddenByDefault: true),
-            TextColumn::make('name')->label(__('media::media.columns.name'))->searchable()->sortable(),
+            TextColumn::make('name')->label(__('media::media.columns.name'))->searchable(),
             TextColumn::make('mime_type')->label(__('media::media.columns.type')),
-            NumberColumn::make('size')->label(__('media::media.columns.size'))->sortable(),
+            NumberColumn::make('size')->label(__('media::media.columns.size')),
             TextColumn::make('alt')->label(__('media::media.columns.alt')),
-            TextColumn::make('created_at')->label(__('media::media.columns.uploaded-at'))->dateTime()->sortable(),
+            TextColumn::make('created_at')->label(__('media::media.columns.uploaded-at'))->dateTime(),
             NumberColumn::make('attachments_count')->label(__('media::media.columns.usage')),
         ];
     }
@@ -57,7 +56,6 @@ final class MediaTable extends EloquentTableDefinition
     {
         return [
             MediaTypeFilter::make('type')->label(__('media::media.filters.type.label')),
-            DateRangeFilter::make('created_at')->label(__('media::media.columns.uploaded-at')),
         ];
     }
 
