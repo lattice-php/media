@@ -1,0 +1,28 @@
+name: RustFS
+description: Start a RustFS container and create the bucket the S3 tests expect. Reads AWS_ENDPOINT and AWS_BUCKET from the workflow env.
+
+runs:
+  using: composite
+  steps:
+    - name: Start RustFS (S3-compatible)
+      shell: bash
+      run: |
+        docker run -d --name rustfs \
+          -p 9000:9000 \
+          -e RUSTFS_ACCESS_KEY=herd \
+          -e RUSTFS_SECRET_KEY=secretkey \
+          -e RUSTFS_CORS_ALLOWED_ORIGINS=* \
+          rustfs/rustfs:latest /data
+        for i in $(seq 1 30); do
+          if curl -s -o /dev/null http://localhost:9000/; then
+            echo "RustFS is up"; exit 0
+          fi
+          echo "waiting for RustFS ($i)..."; sleep 1
+        done
+        echo "RustFS did not become ready"; docker logs rustfs; exit 1
+
+    - name: Create RustFS bucket
+      shell: bash
+      run: |
+        aws configure set default.s3.addressing_style path
+        aws --endpoint-url "$AWS_ENDPOINT" s3 mb "s3://${AWS_BUCKET}"
