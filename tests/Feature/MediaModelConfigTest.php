@@ -89,6 +89,17 @@ test('actions resolve media through the configured model class', function (): vo
         ->and($media->refresh()->name)->toBe('renamed.jpg');
 });
 
+test('a subclass overriding previewConversion changes which derivative preview_url points at', function (): void {
+    $media = Media::factory()->create([
+        'path' => 'media/a.jpg',
+        'meta' => ['conversions' => ['square' => ['path' => 'media/a-square.webp', 'width' => 100, 'height' => 100]]],
+    ]);
+
+    expect($media)->toBeInstanceOf(CustomMedia::class)
+        ->and($media->previewConversion())->toBe('square')
+        ->and($media->previewUrl())->toContain('media/a-square.webp');
+});
+
 test('a model config that is not a media class falls back to the base model', function (): void {
     config(['media.model' => stdClass::class]);
 

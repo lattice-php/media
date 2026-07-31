@@ -17,4 +17,10 @@ final class CustomMedia extends Media
     {
         return ['square' => fn (Image $image): Image => $image->cover(100, 100)];
     }
+
+    #[\Override]
+    public function previewConversion(): string
+    {
+        return 'square';
+    }
 }

@@ -15,9 +15,6 @@ return [
     'accepted_types' => [],
     'signed_uploads' => env('LATTICE_MEDIA_SIGNED_UPLOADS', false),
 
-    /** The conversion the library grid and pickers preview. */
-    'library_conversion' => 'thumb',
-
     /** Queue for conversion jobs; null uses the default queue. */
     'queue' => null,
 ];

@@ -113,10 +113,19 @@ class Media extends Model
         return $this->pathUrl($path ?? $this->path);
     }
 
+    /**
+     * The conversion every preview surface renders: grid cards, picker chips, the detail panel.
+     * A subclass that overrides `defaultConversions()` and drops `thumb` must override this too.
+     */
+    public function previewConversion(): string
+    {
+        return 'thumb';
+    }
+
     /** The derivative every preview surface renders: grid cards, picker chips, the detail panel. */
     public function previewUrl(): ?string
     {
-        return $this->url((string) config('media.library_conversion', 'thumb'));
+        return $this->url($this->previewConversion());
     }
 
     public function conversionPath(string $name): ?string

@@ -61,7 +61,6 @@ test('media without conversions falls back to the original for every name', func
 
 test('toArray exposes the preview url and dimensions', function (): void {
     Storage::fake('public');
-    config(['media.library_conversion' => 'thumb']);
 
     $payload = Media::factory()->create([
         'path' => 'media/a.jpg',
