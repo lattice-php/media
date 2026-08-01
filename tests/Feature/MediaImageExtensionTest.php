@@ -1,8 +1,10 @@
 <?php
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Storage;
 use Lattice\Lattice\Forms\RichContent;
 use Lattice\Media\Forms\RichEditor\MediaImage;
+use Lattice\Media\Models\Media;
 
 use function Pest\Laravel\actingAs;
 
@@ -51,4 +53,81 @@ test('ephemeral attrs are scrubbed from the canonical document', function (): vo
         ->and($attrs)->not->toHaveKey('width')
         ->and($attrs)->not->toHaveKey('height')
         ->and($attrs)->not->toHaveKey('mediaAlt');
+});
+
+test('prepareDocument resolves media into ephemeral url, dimensions and alt', function (): void {
+    Storage::fake('public');
+    $media = Media::factory()->create(['meta' => ['width' => 800, 'height' => 600, 'alt' => 'A lamp']]);
+
+    $prepared = RichContent::make(mediaImageDoc(['id' => $media->getKey()]), extensions: [MediaImage::make()])
+        ->toPreparedArray();
+    $attrs = $prepared['content'][0]['attrs'];
+
+    expect($attrs['url'])->toContain($media->path)
+        ->and($attrs['width'])->toBe(800)
+        ->and($attrs['height'])->toBe(600)
+        ->and($attrs['mediaAlt'])->toBe('A lamp');
+});
+
+test('a node conversion resolves to the conversion url and dimensions', function (): void {
+    Storage::fake('public');
+    $media = Media::factory()->create(['meta' => [
+        'width' => 800,
+        'height' => 600,
+        'conversions' => ['hero' => ['path' => 'media/conversions/hero.webp', 'width' => 1200, 'height' => 800]],
+    ]]);
+
+    $prepared = RichContent::make(
+        mediaImageDoc(['id' => $media->getKey(), 'conversion' => 'hero']),
+        extensions: [MediaImage::make()->conversions('hero')],
+    )->toPreparedArray();
+    $attrs = $prepared['content'][0]['attrs'];
+
+    expect($attrs['url'])->toContain('hero.webp')
+        ->and($attrs['width'])->toBe(1200)
+        ->and($attrs['height'])->toBe(800);
+});
+
+test('an ungenerated conversion falls back to the original url and dimensions', function (): void {
+    Storage::fake('public');
+    $media = Media::factory()->create(['meta' => ['width' => 800, 'height' => 600]]);
+
+    $prepared = RichContent::make(
+        mediaImageDoc(['id' => $media->getKey(), 'conversion' => 'missing']),
+        extensions: [MediaImage::make()],
+    )->toPreparedArray();
+    $attrs = $prepared['content'][0]['attrs'];
+
+    expect($attrs['url'])->toContain($media->path)
+        ->and($attrs['width'])->toBe(800);
+});
+
+test('toHtml renders the img with a sanitizer-approved relative url', function (): void {
+    Storage::fake('public');
+    $media = Media::factory()->create(['meta' => ['alt' => 'A lamp']]);
+
+    $html = RichContent::make(mediaImageDoc(['id' => $media->getKey()]), extensions: [MediaImage::make()])->toHtml();
+
+    expect($html)->toContain('<img')
+        ->toContain($media->path)
+        ->toContain('alt="A lamp"')
+        ->toContain('data-media-id="'.$media->getKey().'"');
+});
+
+test('a node alt override beats the library alt in rendered html', function (): void {
+    Storage::fake('public');
+    $media = Media::factory()->create(['meta' => ['alt' => 'Library alt']]);
+
+    $html = RichContent::make(
+        mediaImageDoc(['id' => $media->getKey(), 'alt' => 'Override']),
+        extensions: [MediaImage::make()],
+    )->toHtml();
+
+    expect($html)->toContain('alt="Override"')->not->toContain('Library alt');
+});
+
+test('deleted media renders no img', function (): void {
+    $html = RichContent::make(mediaImageDoc(['id' => 424242]), extensions: [MediaImage::make()])->toHtml();
+
+    expect($html)->not->toContain('<img');
 });
