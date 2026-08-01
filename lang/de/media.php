@@ -25,6 +25,13 @@ return [
         'remove' => ':name entfernen',
         'selected-of-max' => ':count/:max ausgewählt',
     ],
+    'editor' => [
+        'insert' => 'Bild einfügen',
+        'alt' => 'Alternativtext',
+        'size' => 'Größe',
+        'original' => 'Original',
+        'missing' => 'Fehlende Datei',
+    ],
     'validation' => [
         'not-attachable' => 'Die ausgewählte Datei ist nicht verfügbar.',
     ],

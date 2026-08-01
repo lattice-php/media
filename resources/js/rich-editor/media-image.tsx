@@ -1,9 +1,14 @@
-import { mergeAttributes, Node } from "@tiptap/core";
+import { useState } from "react";
+import { mergeAttributes, Node, type Editor } from "@tiptap/core";
 import { NodeViewWrapper, ReactNodeViewRenderer, type NodeViewProps } from "@tiptap/react";
-import { useT } from "@lattice-php/lattice/i18n";
+import { registerRichEditorExtension, ToolbarIconButton } from "@lattice-php/lattice/form/rich-editor";
+import type { Node as WireNode } from "@lattice-php/lattice/core/types";
+import { translate, useT } from "@lattice-php/lattice/i18n";
 import { cn } from "@lattice-php/lattice/lib/utils";
+import { Dialog, DialogContent, DialogHeader } from "@lattice-php/lattice/ui/dialog";
 import { Input } from "@lattice-php/lattice/ui/input";
 import { NativeSelect } from "@lattice-php/lattice/ui/native-select";
+import { LibraryView, type MediaRow } from "../components/library-view";
 
 type MediaImageOptions = { conversions: string[] };
 
@@ -102,3 +107,71 @@ export const MediaImageNode = Node.create<MediaImageOptions>({
     return ReactNodeViewRenderer(MediaImageView);
   },
 });
+
+function InsertMediaImageControl({ editor, library }: { editor: Editor; library: WireNode | null }) {
+  const { t } = useT("media");
+  const [open, setOpen] = useState(false);
+
+  if (!library) {
+    return null;
+  }
+
+  return (
+    <>
+      <ToolbarIconButton
+        icon="image"
+        label={t("media.editor.insert", "Insert image")}
+        onClick={() => setOpen(true)}
+        testId="editor-media-image-insert"
+      />
+      {open && (
+        <Dialog onOpenChange={setOpen} open>
+          <DialogContent
+            aria-describedby={undefined}
+            className="flex flex-col gap-5"
+            data-test="editor-media-image-dialog"
+            width="3xl"
+          >
+            <DialogHeader
+              closeLabel={translate("lattice", "common.close", "Close")}
+              title={t("media.picker.heading", "Choose media")}
+            />
+            <LibraryView
+              node={library}
+              pick={{
+                multiple: true,
+                onConfirm: (items: MediaRow[]) => {
+                  editor
+                    .chain()
+                    .focus()
+                    .insertContent(
+                      items.map((item) => ({
+                        type: "mediaImage",
+                        attrs: { id: item.id, url: item.url, mediaAlt: item.alt },
+                      })),
+                    )
+                    .run();
+                  setOpen(false);
+                },
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
+  );
+}
+
+export function registerMediaImage(): void {
+  registerRichEditorExtension("media-image", {
+    extensions: (props) => [MediaImageNode.configure({ conversions: props.conversions ?? [] })],
+    toolbar: (props) => [
+      {
+        key: "media-image",
+        component: ({ editor }) => (
+          <InsertMediaImageControl editor={editor} library={props.library ?? null} />
+        ),
+      },
+    ],
+  });
+}

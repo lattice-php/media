@@ -1,4 +1,11 @@
 import { createPlugin, lazyComponent } from "@lattice-php/lattice";
+import { registerMediaImage } from "./rich-editor/media-image";
+
+// Must run before the app boots — the editor resolves definitions from the
+// registry when it mounts, so this cannot live in a lazy chunk.
+// ponytail: pulls @tiptap/core+react into the eager bundle; revisit if lattice
+// grows lazy extension registration.
+registerMediaImage();
 
 export default createPlugin({
   name: "media",

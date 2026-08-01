@@ -1,9 +1,10 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import * as richEditor from "@lattice-php/lattice/form/rich-editor";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import { StarterKit } from "@tiptap/starter-kit";
-import { describe, expect, it } from "vitest";
-import { MediaImageNode } from "./media-image";
+import { describe, expect, it, vi } from "vitest";
+import { MediaImageNode, registerMediaImage } from "./media-image";
 
 function Harness({
   attrs,
@@ -76,5 +77,24 @@ describe("MediaImageNode", () => {
       const node = editor.getJSON().content?.find((child) => child.type === "mediaImage");
       expect(node?.attrs?.conversion).toBe("hero");
     });
+  });
+});
+
+describe("registerMediaImage", () => {
+  it("registers a definition that yields the node and one toolbar control", () => {
+    // `resolveRichEditorExtensions` is an internal lattice helper (not part of
+    // the package's public `form/rich-editor` export), so this asserts on the
+    // definition passed to the public `registerRichEditorExtension` instead.
+    const spy = vi.spyOn(richEditor, "registerRichEditorExtension");
+
+    registerMediaImage();
+
+    expect(spy).toHaveBeenCalledWith("media-image", expect.anything());
+    const definition = spy.mock.calls[0]![1];
+    const props = { conversions: ["hero"], library: null };
+
+    const extensions = definition.extensions!(props);
+    expect(extensions[0]!.name).toBe("mediaImage");
+    expect(definition.toolbar!(props)).toHaveLength(1);
   });
 });
