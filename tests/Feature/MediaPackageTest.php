@@ -11,7 +11,7 @@ test('the media package is discovered with config and plugin', function (): void
         ->and(config('media.max_size'))->toBe(10240);
 
     $package = collect(ComponentPackages::packages())
-        ->first(fn (array $package): bool => $package['name'] === 'lattice-php/media');
+        ->first(fn (array $package): bool => $package['name'] === 'lattice/media');
 
     expect($package)->not->toBeNull();
 });
