@@ -6,7 +6,9 @@ namespace Lattice\Media;
 
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Lattice\Lattice\Forms\RichEditor\EditorExtensionRegistry;
 use Lattice\Media\Console\Commands\GenerateConversionsCommand;
+use Lattice\Media\Forms\RichEditor\MediaImage;
 use Lattice\Media\Models\Media;
 use Lattice\Media\Policies\MediaPolicy;
 
@@ -31,5 +33,7 @@ final class MediaServiceProvider extends ServiceProvider
         // i18next JSON route resolves only the translation loader, never the
         // translator, so the deferred callback would not fire for it.
         $this->app->make('translation.loader')->addNamespace('media', __DIR__.'/../lang');
+
+        $this->app->make(EditorExtensionRegistry::class)->register(MediaImage::class);
     }
 }

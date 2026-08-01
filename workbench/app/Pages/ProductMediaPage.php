@@ -35,7 +35,10 @@ final class ProductMediaPage extends WorkbenchPage
                     Form::use(ProductMediaForm::class, ['product_id' => $product->getKey()])
                         ->method(HttpMethod::Post)
                         ->submitLabel(__('workbench.pages.product-media.submit'))
-                        ->fill(['gallery' => $product->mediaPickerValue('gallery')]),
+                        ->fill([
+                            'gallery' => $product->mediaPickerValue('gallery'),
+                            'body' => $product->body,
+                        ]),
                     Table::use(ProductMediaTable::class),
                 ]),
         ]);

@@ -6,9 +6,11 @@ namespace Workbench\App\Forms;
 use Illuminate\Http\Request;
 use Lattice\Lattice\Attributes\AsForm;
 use Lattice\Lattice\Forms\Components\Form as FormComponent;
+use Lattice\Lattice\Forms\Components\RichEditor;
 use Lattice\Lattice\Forms\Components\TextInput;
 use Lattice\Lattice\Forms\FormDefinition;
 use Lattice\Media\Forms\Components\MediaPicker;
+use Lattice\Media\Forms\RichEditor\MediaImage;
 use Symfony\Component\HttpFoundation\Response;
 use Workbench\App\Models\Product;
 
@@ -24,6 +26,8 @@ class ProductMediaForm extends FormDefinition
                     TextInput::make('caption', __('workbench.forms.product-media.fields.caption')),
                 ])
                 ->helperText(__('workbench.forms.product-media.fields.gallery-help-text')),
+            RichEditor::make('body', __('workbench.forms.product-media.fields.body'))
+                ->withExtensions(MediaImage::make()),
         ]);
     }
 
@@ -32,6 +36,8 @@ class ProductMediaForm extends FormDefinition
         $validated = $this->validate($request);
 
         $this->product()->syncMedia($validated['gallery'] ?? [], 'gallery');
+        $this->product()->update(['body' => $validated['body'] ?? null]);
+        $this->product()->syncMedia(MediaImage::idsIn($validated['body'] ?? null), 'content');
 
         return redirect('/media-picker');
     }

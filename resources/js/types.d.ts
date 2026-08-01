@@ -1,7 +1,15 @@
 import "@lattice-php/lattice";
+import type { Node } from "@lattice-php/lattice/core/types";
 import type { ColumnWidth, FieldConditions } from "@lattice-php/lattice/types/generated";
 
 declare module "@lattice-php/lattice" {
+  interface EditorExtensionProps {
+    "media-image": {
+      conversions: string[];
+      library: Node | null;
+    };
+  }
+
   interface ComponentProps {
     "media.library": {
       picker: boolean;

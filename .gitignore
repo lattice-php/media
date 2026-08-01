@@ -10,3 +10,5 @@ composer.lock
 /CLAUDE.md
 /.claude/
 /.agents/
+/docs/superpowers/
+/.superpowers/

@@ -25,6 +25,14 @@ return [
         'remove' => 'Remove :name',
         'selected-of-max' => ':count/:max selected',
     ],
+    'editor' => [
+        'insert' => 'Insert image',
+        'alt' => 'Alt text',
+        'size' => 'Size',
+        'original' => 'Original',
+        'missing' => 'Missing media',
+        'not-attachable' => 'Media #:id is not available.',
+    ],
     'validation' => [
         'not-attachable' => 'The selected file is not available.',
     ],
