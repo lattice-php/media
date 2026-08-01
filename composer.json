@@ -6,7 +6,7 @@
     "require": {
         "php": "^8.4",
         "intervention/image": "^4.0",
-        "lattice-php/lattice": ">=0.29.0 <1.0.0"
+        "lattice-php/lattice": ">=0.34.0 <1.0.0"
     },
     "require-dev": {
         "bambamboole/laravel-i18next": "^0.6.0",
