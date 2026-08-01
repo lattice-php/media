@@ -116,6 +116,33 @@ test('toHtml renders the img with a sanitizer-approved relative url', function (
         ->toContain('data-media-id="'.$media->getKey().'"');
 });
 
+test('toHtml keeps sanitizer-approved width, height and lazy loading attrs', function (): void {
+    Storage::fake('public');
+    $media = Media::factory()->create(['meta' => ['width' => 800, 'height' => 600]]);
+
+    $html = RichContent::make(mediaImageDoc(['id' => $media->getKey()]), extensions: [MediaImage::make()])->toHtml();
+
+    expect($html)->toContain('width="800"')
+        ->toContain('height="600"')
+        ->toContain('loading="lazy"');
+});
+
+test('prepareDocument resolves a mediaImage node nested inside other content', function (): void {
+    Storage::fake('public');
+    $media = Media::factory()->create();
+
+    $document = ['type' => 'doc', 'content' => [
+        ['type' => 'blockquote', 'content' => [
+            ['type' => 'mediaImage', 'attrs' => ['id' => $media->getKey()]],
+        ]],
+    ]];
+
+    $prepared = RichContent::make($document, extensions: [MediaImage::make()])->toPreparedArray();
+    $attrs = $prepared['content'][0]['content'][0]['attrs'];
+
+    expect($attrs['url'])->toContain($media->path);
+});
+
 test('a node alt override beats the library alt in rendered html', function (): void {
     Storage::fake('public');
     $media = Media::factory()->create(['meta' => ['alt' => 'Library alt']]);
@@ -137,7 +164,7 @@ test('deleted media renders no img', function (): void {
 test('validateDocument rejects ids that do not exist', function (): void {
     $errors = MediaImage::make()->validateDocument(mediaImageDoc(['id' => 424242]));
 
-    expect($errors)->toBe([__('media::media.validation.not-attachable')]);
+    expect($errors)->toBe([__('media::media.editor.not-attachable', ['id' => 424242])]);
 });
 
 test('validateDocument rejects media the user may not attach', function (): void {
@@ -145,7 +172,14 @@ test('validateDocument rejects media the user may not attach', function (): void
     Auth::logout();
 
     expect(MediaImage::make()->validateDocument(mediaImageDoc(['id' => $media->getKey()])))
-        ->toHaveCount(1);
+        ->toBe([__('media::media.editor.not-attachable', ['id' => $media->getKey()])]);
+});
+
+test('validateDocument rejects non-image media', function (): void {
+    $media = Media::factory()->document()->create();
+
+    expect(MediaImage::make()->validateDocument(mediaImageDoc(['id' => $media->getKey()])))
+        ->toBe([__('media::media.editor.not-attachable', ['id' => $media->getKey()])]);
 });
 
 test('validateDocument accepts attachable media', function (): void {

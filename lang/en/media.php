@@ -31,6 +31,7 @@ return [
         'size' => 'Size',
         'original' => 'Original',
         'missing' => 'Missing media',
+        'not-attachable' => 'Media #:id is not available.',
     ],
     'validation' => [
         'not-attachable' => 'The selected file is not available.',

@@ -35,7 +35,7 @@ class MediaImage extends EditorExtension
     public static function make(): static
     {
         $extension = parent::make();
-        $extension->library = MediaLibrary::make('rich-editor-media-library')->picker();
+        $extension->library = MediaLibrary::make('rich-editor-media-library')->picker()->accept('image/*');
 
         return $extension;
     }
@@ -99,8 +99,8 @@ class MediaImage extends EditorExtension
         foreach ($ids as $id) {
             $item = $media->get($id);
 
-            if (! $item instanceof Media || Gate::denies('attach', $item)) {
-                $errors[] = __('media::media.validation.not-attachable');
+            if (! $item instanceof Media || Gate::denies('attach', $item) || ! $item->isImage()) {
+                $errors[] = __('media::media.editor.not-attachable', ['id' => $id]);
             }
         }
 

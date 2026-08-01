@@ -31,6 +31,7 @@ return [
         'size' => 'Größe',
         'original' => 'Original',
         'missing' => 'Fehlende Datei',
+        'not-attachable' => 'Datei #:id ist nicht verfügbar.',
     ],
     'validation' => [
         'not-attachable' => 'Die ausgewählte Datei ist nicht verfügbar.',
