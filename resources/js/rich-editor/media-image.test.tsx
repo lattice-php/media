@@ -71,6 +71,7 @@ describe("MediaImageNode", () => {
     editor.commands.setNodeSelection(0);
 
     await waitFor(() => expect(screen.getByLabelText("Size")).not.toBeNull());
+    expect(screen.getByRole("option", { name: "Original" })).not.toBeNull();
     await userEvent.selectOptions(screen.getByLabelText("Size"), "hero");
 
     await waitFor(() => {
