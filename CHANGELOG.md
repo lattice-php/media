@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.2.0](https://github.com/lattice-php/media/compare/0.1.0...0.2.0) (2026-08-01)
+
+
+### Features
+
+* client tiptap node and node view for media images ([14e6819](https://github.com/lattice-php/media/commit/14e68195dcd9a6a3c2102238c50fdb7ec10abf19))
+* media image toolbar with library picker and plugin registration ([2213f07](https://github.com/lattice-php/media/commit/2213f07a2e538361f6d197c4b3bde6417b6217ef))
+* media-image editor extension with wire props and ephemeral attrs ([3e4cac0](https://github.com/lattice-php/media/commit/3e4cac0e93a09f1118579547a8c3b000a21c3514))
+* media-image rich-editor extension ([b121a98](https://github.com/lattice-php/media/commit/b121a9812656c68e5eacc46fd183ec8f3b31bb8c))
+* resolve media urls into ephemeral attrs on document preparation ([0edd9cd](https://github.com/lattice-php/media/commit/0edd9cd2d12678dc6f1816b7fd953950f0f9e6ef))
+* tiptap-php node for rich-editor media images ([d64359d](https://github.com/lattice-php/media/commit/d64359db1d64aa0eeb44f2b5b7b96bef5d0dabf7))
+* validate media references and register the extension app-wide ([3f00eb1](https://github.com/lattice-php/media/commit/3f00eb1f80939c71fbf3afc390e47a01a5cad692))
+
+
+### Bug Fixes
+
+* lazy-load the media-image picker dialog out of the eager bundle ([ea56740](https://github.com/lattice-php/media/commit/ea5674087b43e25abeb0bda37d2dcd11165e3357))
+* reject non-image media in rich-editor image nodes with identified errors ([1dcc0a6](https://github.com/lattice-php/media/commit/1dcc0a6b3232cc81520ed051a9ead4f18c8fc63b))
+
+
+### Documentation
+
+* media rich-editor extension design spec ([15b41d6](https://github.com/lattice-php/media/commit/15b41d6da88a0835901b11f34439c807b988ac2a))
+* media rich-editor extension implementation plan ([3b8deef](https://github.com/lattice-php/media/commit/3b8deef50fd761aa73fbd682986999e1a1abc30b))
+* rich editor images ([b1ede0e](https://github.com/lattice-php/media/commit/b1ede0eba28fa898256fa736621e8ad6f5cd2a45))
+
 ## 0.1.0 (2026-07-31)
 
 
