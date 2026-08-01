@@ -1,5 +1,5 @@
 {
-    "name": "lattice/media",
+    "name": "lattice-php/media",
     "description": "First-party media library for Lattice.",
     "type": "library",
     "license": "MIT",
