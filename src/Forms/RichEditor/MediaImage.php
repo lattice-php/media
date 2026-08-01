@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Lattice\Media\Forms\RichEditor;
 
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Gate;
 use Lattice\Lattice\Forms\RichContent;
 use Lattice\Lattice\Forms\RichEditor\Attributes\AsEditorExtension;
 use Lattice\Lattice\Forms\RichEditor\EditorExtension;
@@ -80,6 +81,43 @@ class MediaImage extends EditorExtension
             ->keyBy(static fn (Media $item): int => (int) $item->getKey());
 
         return $this->resolve($document, $media);
+    }
+
+    #[\Override]
+    public function validateDocument(array $document): array
+    {
+        $ids = self::idsFromNodes(RichContent::make($document, extensions: [$this])->nodes('mediaImage'));
+
+        if ($ids === []) {
+            return [];
+        }
+
+        $media = Media::modelQuery()->findMany($ids)
+            ->keyBy(static fn (Media $item): int => (int) $item->getKey());
+        $errors = [];
+
+        foreach ($ids as $id) {
+            $item = $media->get($id);
+
+            if (! $item instanceof Media || Gate::denies('attach', $item)) {
+                $errors[] = __('media::media.validation.not-attachable');
+            }
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Media ids referenced by a stored document — feed for
+     * `HasMedia::syncMedia()` after persisting the document. Uses the
+     * app-wide registry, so it works on bare stored values.
+     *
+     * @param  array<string, mixed>|string|null  $document
+     * @return list<int>
+     */
+    public static function idsIn(array|string|null $document): array
+    {
+        return self::idsFromNodes(RichContent::make($document)->nodes('mediaImage'));
     }
 
     /**

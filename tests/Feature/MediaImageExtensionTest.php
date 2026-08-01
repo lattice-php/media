@@ -1,8 +1,10 @@
 <?php
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Lattice\Lattice\Forms\RichContent;
+use Lattice\Lattice\Forms\RichEditor\EditorExtensionRegistry;
 use Lattice\Media\Forms\RichEditor\MediaImage;
 use Lattice\Media\Models\Media;
 
@@ -130,4 +132,40 @@ test('deleted media renders no img', function (): void {
     $html = RichContent::make(mediaImageDoc(['id' => 424242]), extensions: [MediaImage::make()])->toHtml();
 
     expect($html)->not->toContain('<img');
+});
+
+test('validateDocument rejects ids that do not exist', function (): void {
+    $errors = MediaImage::make()->validateDocument(mediaImageDoc(['id' => 424242]));
+
+    expect($errors)->toBe([__('media::media.validation.not-attachable')]);
+});
+
+test('validateDocument rejects media the user may not attach', function (): void {
+    $media = Media::factory()->create();
+    Auth::logout();
+
+    expect(MediaImage::make()->validateDocument(mediaImageDoc(['id' => $media->getKey()])))
+        ->toHaveCount(1);
+});
+
+test('validateDocument accepts attachable media', function (): void {
+    $media = Media::factory()->create();
+
+    expect(MediaImage::make()->validateDocument(mediaImageDoc(['id' => $media->getKey()])))->toBe([]);
+});
+
+test('the extension is registered app-wide', function (): void {
+    expect(app(EditorExtensionRegistry::class)->all())->toHaveKey('media-image');
+});
+
+test('idsIn collects unique media ids through the bare registry path', function (): void {
+    $document = ['type' => 'doc', 'content' => [
+        ['type' => 'mediaImage', 'attrs' => ['id' => 7]],
+        ['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'between']]],
+        ['type' => 'mediaImage', 'attrs' => ['id' => 7]],
+        ['type' => 'mediaImage', 'attrs' => ['id' => 9]],
+    ]];
+
+    expect(MediaImage::idsIn($document))->toBe([7, 9])
+        ->and(MediaImage::idsIn(null))->toBe([]);
 });
