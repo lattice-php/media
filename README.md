@@ -7,7 +7,7 @@ and a form field that attaches media to any model through a polymorphic pivot.
 ## Installation
 
 ```bash
-composer require lattice-php/media
+composer require lattice/media
 ```
 
 Requires `lattice-php/lattice` `>=0.29.0 <1.0.0`.
