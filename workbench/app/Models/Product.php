@@ -16,6 +16,7 @@ use Workbench\App\Factories\ProductFactory;
 
 /**
  * @property string $name
+ * @property array<string, mixed>|null $body
  * @property-read string|null $gallery_cover_url
  * @property-read Collection<int, Media> $galleryMedia
  */
@@ -27,7 +28,13 @@ class Product extends Model
     use HasMedia;
 
     /** @var list<string> */
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'body'];
+
+    /** @return array<string, string> */
+    protected function casts(): array
+    {
+        return ['body' => 'array'];
+    }
 
     /** @return MorphToMany<Media, $this, Attachment> */
     public function galleryMedia(): MorphToMany

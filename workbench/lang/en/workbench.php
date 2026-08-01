@@ -23,6 +23,7 @@ return [
                 'gallery' => 'Gallery',
                 'gallery-help-text' => 'Pick images from the media library.',
                 'caption' => 'Caption',
+                'body' => 'Article body',
             ],
         ],
     ],

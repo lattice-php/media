@@ -23,6 +23,7 @@ return [
                 'gallery' => 'Galerie',
                 'gallery-help-text' => 'Bilder aus der Mediathek auswählen.',
                 'caption' => 'Bildunterschrift',
+                'body' => 'Artikeltext',
             ],
         ],
     ],
