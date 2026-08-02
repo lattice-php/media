@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Lattice\Media\Forms\RichEditor;
@@ -20,6 +21,7 @@ final class MediaImageNode extends Node
     /**
      * @return array<string, array{default: null}>
      */
+    #[\Override]
     public function addAttributes(): array
     {
         return [

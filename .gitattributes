@@ -9,9 +9,10 @@ resources/js/**/*.test.* export-ignore
 /.gitignore export-ignore
 /artisan export-ignore
 /boost.json export-ignore
-/phpunit.xml export-ignore
-/phpstan.neon export-ignore
+/phpunit.xml.dist export-ignore
+/phpstan.neon.dist export-ignore
 /pint.json export-ignore
+/rector.php export-ignore
 /testbench.yaml export-ignore
 /vite.config.ts export-ignore
 /vite.lattice-deep-imports.ts export-ignore

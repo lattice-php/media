@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Workbench\App\Models;
@@ -31,6 +32,7 @@ class Product extends Model
     protected $fillable = ['name', 'body'];
 
     /** @return array<string, string> */
+    #[\Override]
     protected function casts(): array
     {
         return ['body' => 'array'];

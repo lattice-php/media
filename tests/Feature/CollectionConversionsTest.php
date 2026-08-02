@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 use Illuminate\Http\UploadedFile;
@@ -90,7 +91,7 @@ test('a partial re-sync queues only the media that were not attached before', fu
 test("the collection's conversion is generated on top of the defaults", function (): void {
     $media = galleryImage();
 
-    (new GenerateMediaConversions($media, Product::factory()->create(), 'gallery'))->handle();
+    new GenerateMediaConversions($media, Product::factory()->create(), 'gallery')->handle();
     $media->refresh();
 
     expect(array_keys($media->conversions()))->toEqualCanonicalizing(['thumb', 'card'])
@@ -103,7 +104,7 @@ test("the collection's conversion is generated on top of the defaults", function
 test('a bare string reuses the globally defined conversion of that name', function (): void {
     $media = galleryImage();
 
-    (new GenerateMediaConversions($media, conversionProduct('legacy'), 'legacy'))->handle();
+    new GenerateMediaConversions($media, conversionProduct('legacy'), 'legacy')->handle();
     $media->refresh();
 
     expect(array_keys($media->conversions()))->toBe(['thumb'])
@@ -115,7 +116,7 @@ test('a bare string naming no global conversion fails loudly', function (): void
     $product = conversionProduct('typo');
 
     expect(function () use ($media, $product): void {
-        (new GenerateMediaConversions($media, $product, 'typo'))->handle();
+        new GenerateMediaConversions($media, $product, 'typo')->handle();
     })->toThrow(RuntimeException::class, 'The [thumbnail] media conversion is not defined');
 });
 
@@ -123,10 +124,10 @@ test('two collections asking for the same conversion name produce one file and o
     $media = galleryImage();
     $product = conversionProduct('shared');
 
-    (new GenerateMediaConversions($media, $product, 'gallery'))->handle();
+    new GenerateMediaConversions($media, $product, 'gallery')->handle();
     $generated = $media->refresh()->conversions();
 
-    (new GenerateMediaConversions($media, $product, 'hero'))->handle();
+    new GenerateMediaConversions($media, $product, 'hero')->handle();
 
     expect($media->refresh()->conversions())->toBe($generated)
         ->and(Storage::disk('public')->files('media/conversions'))->toHaveCount(2);
@@ -137,7 +138,7 @@ test('detaching deletes no derivative: another attachment may rely on the same n
     $product = Product::factory()->create();
     $product->syncMedia([$media->getKey()], 'gallery');
 
-    (new GenerateMediaConversions($media, $product, 'gallery'))->handle();
+    new GenerateMediaConversions($media, $product, 'gallery')->handle();
     $paths = $media->refresh()->conversionPaths();
 
     $product->syncMedia([], 'gallery');
