@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Lattice\Media\Forms\Components;
@@ -140,7 +141,7 @@ class MediaPicker extends Field implements ProvidesRowFields
      */
     protected function rowsOf(mixed $value): array
     {
-        if ($value === null || $value === '' || $value === []) {
+        if (in_array($value, [null, '', []], true)) {
             return [];
         }
 

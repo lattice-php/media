@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 use Lattice\Media\Tests\BrowserTestCase;
@@ -6,7 +7,7 @@ use Lattice\Media\Tests\TestCase;
 
 require_once __DIR__.'/Support/Browser.php';
 
-uses(TestCase::class)->in('Feature');
+uses(TestCase::class)->in('Unit', 'Feature');
 uses(BrowserTestCase::class)->in('Browser');
 
 /**

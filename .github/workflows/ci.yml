@@ -23,7 +23,7 @@ env:
 
 jobs:
   php:
-    name: PHP ${{ matrix.php-version }} (${{ matrix.php-version == '8.4' && 'pint, phpstan, pest' || 'pest' }})
+    name: PHP ${{ matrix.php-version }} (${{ matrix.php-version == '8.4' && 'pint, phpstan, rector, pest' || 'pest' }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -53,7 +53,7 @@ jobs:
 
       - run: composer install --prefer-dist --no-progress --no-interaction
 
-      - name: Pint, PHPStan, Pest
+      - name: Pint, PHPStan, Rector, Pest
         if: ${{ matrix.php-version == '8.4' }}
         run: composer check
 

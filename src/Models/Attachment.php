@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Lattice\Media\Models;
@@ -30,6 +31,7 @@ final class Attachment extends MorphPivot
     /**
      * @return array<string, string>
      */
+    #[\Override]
     protected function casts(): array
     {
         return ['meta' => 'array'];

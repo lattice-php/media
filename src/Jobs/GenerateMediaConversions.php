@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Lattice\Media\Jobs;
@@ -46,7 +47,7 @@ final class GenerateMediaConversions implements ShouldQueue
     public function middleware(): array
     {
         return [
-            (new WithoutOverlapping((string) $this->media->getKey()))
+            new WithoutOverlapping((string) $this->media->getKey())
                 ->releaseAfter(30)
                 ->expireAfter(300),
         ];

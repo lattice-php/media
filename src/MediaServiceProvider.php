@@ -14,6 +14,7 @@ use Lattice\Media\Policies\MediaPolicy;
 
 final class MediaServiceProvider extends ServiceProvider
 {
+    #[\Override]
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/media.php', 'media');

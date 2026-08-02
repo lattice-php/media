@@ -191,7 +191,7 @@ them like any Laravel package translation).
 
 ```bash
 composer install && npm install
-composer check          # pint --test, phpstan, pest (Feature)
+composer check          # pint --test, phpstan, rector --dry-run, pest (Unit + Feature)
 npm run typecheck && npm test
 composer test:browser   # rebuilds the workbench bundle, then runs the Playwright suite
 composer serve          # workbench demo app: /media (library) and /media-picker (field in a form)

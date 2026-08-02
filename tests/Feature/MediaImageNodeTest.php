@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 use Lattice\Media\Forms\RichEditor\MediaImageNode;

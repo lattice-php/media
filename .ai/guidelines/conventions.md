@@ -24,7 +24,7 @@
 - **Uploads have two paths.** Multipart uploads go through `UploadMediaAction` and land on `config('media.disk')`;
   with `media.signed_uploads` enabled the action instead finalizes an already-uploaded temp key out of the `tmp/`
   prefix. Accepted types come from `config('media.accepted_types')` (mime patterns, `image/*` wildcards included).
-- **Version coupling.** The package requires `lattice-php/lattice` `>=0.29.0 <1.0.0` — pre-1.0 minors are treated as
+- **Version coupling.** The package requires `lattice-php/lattice` `>=0.36.0 <1.0.0` — pre-1.0 minors are treated as
   compatible, so a caret (which pins one 0.x minor) is deliberately avoided. Features that depend on newer core APIs
   must raise the lower bound and wait for the corresponding core release.
 
