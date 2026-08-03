@@ -9,7 +9,7 @@
         "lattice-php/lattice": ">=0.36.0 <1.0.0"
     },
     "require-dev": {
-        "bambamboole/extended-testbench": "^0.3",
+        "bambamboole/extended-testbench": "^0.6",
         "bambamboole/laravel-i18next": "^0.6.0",
         "larastan/larastan": "^3.0",
         "laravel/boost": "^2.4",
@@ -34,6 +34,12 @@
         }
     },
     "extra": {
+        "extended-testbench": {
+            "check-ignore": [
+                "tests/Browser/DummyTest.php",
+                "rector.php"
+            ]
+        },
         "lattice": {
             "plugin": "resources/js/plugin.ts",
             "discover": ["src"]
@@ -55,9 +61,9 @@
         "post-update-cmd": [
             "@boost:refresh"
         ],
-        "boost:refresh": "[ -n \"$CI\" ] || [ ! -f vendor/bin/testbench ] || [ ! -f boost.json ] || vendor/bin/testbench boost:update --no-interaction || true",
+        "boost:refresh": "[ -n \"$CI\" ] || [ ! -f vendor/bin/testbench ] || [ ! -f boost.json ] || { [ -f package.json ] && [ ! -d node_modules ]; } || vendor/bin/testbench boost:update --no-interaction || true",
         "serve": "@php vendor/bin/testbench serve",
-        "test": "pest --testsuite=Unit,Feature",
+        "test": "pest --exclude-testsuite=Browser",
         "test:browser": [
             "npm run build",
             "pest --testsuite=Browser"
