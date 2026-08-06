@@ -1,11 +1,11 @@
 import { useState } from "react";
 import type { ActionEffect } from "@lattice-php/lattice";
 import { runAction } from "@lattice-php/lattice/action/lib/run-action";
-import { apiFetch, xsrfToken } from "@lattice-php/lattice/core/api";
-import { withHeaders } from "@lattice-php/lattice/core/headers";
-import { requestSignedUpload, xhrTransfer } from "@lattice-php/lattice/core/upload";
-import { useEffectDispatcher } from "@lattice-php/lattice/effects/use-effect-dispatcher";
-import { useT } from "@lattice-php/lattice/i18n";
+import { apiFetch, xsrfToken } from "@lattice-php/core/api";
+import { withHeaders } from "@lattice-php/core/headers";
+import { requestSignedUpload, xhrTransfer } from "@lattice-php/core/upload";
+import { useEffectDispatcher } from "@lattice-php/ui/effects/use-effect-dispatcher";
+import { useT } from "@lattice-php/ui/i18n";
 import type { SignedUpload } from "@lattice-php/lattice/types/generated";
 
 export type UploadItem = {

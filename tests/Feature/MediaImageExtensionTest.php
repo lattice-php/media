@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Lattice\Lattice\Forms\RichContent;
-use Lattice\Lattice\Forms\RichEditor\EditorExtensionRegistry;
+use Lattice\Form\RichContent;
+use Lattice\Form\RichEditor\EditorExtensionRegistry;
 use Lattice\Media\Forms\RichEditor\MediaImage;
 use Lattice\Media\Models\Media;
 

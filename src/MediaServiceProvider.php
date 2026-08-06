@@ -5,7 +5,7 @@ namespace Lattice\Media;
 
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
-use Lattice\Lattice\Forms\RichEditor\EditorExtensionRegistry;
+use Lattice\Form\RichEditor\EditorExtensionRegistry;
 use Lattice\Media\Console\Commands\GenerateConversionsCommand;
 use Lattice\Media\Forms\RichEditor\MediaImage;
 use Lattice\Media\Models\Media;

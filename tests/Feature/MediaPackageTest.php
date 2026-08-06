@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-use Lattice\Lattice\Core\Discovery\ComponentPackages;
+use Lattice\Core\Discovery\ComponentPackages;
 
 use function Pest\Laravel\getJson;
 

@@ -1,12 +1,16 @@
 import { lazy, Suspense, useState } from "react";
 import { mergeAttributes, Node, type Editor } from "@tiptap/core";
 import { NodeViewWrapper, ReactNodeViewRenderer, type NodeViewProps } from "@tiptap/react";
-import { registerRichEditorExtension, ToolbarIconButton } from "@lattice-php/lattice/form/rich-editor";
-import type { Node as WireNode } from "@lattice-php/lattice/core/types";
-import { useT } from "@lattice-php/lattice/i18n";
-import { cn } from "@lattice-php/lattice/lib/utils";
-import { Input } from "@lattice-php/lattice/ui/input";
-import { NativeSelect } from "@lattice-php/lattice/ui/native-select";
+import {
+  ToolbarIconButton,
+  type EditorExtensionPayloadOf,
+  type RichEditorExtensionDefinition,
+} from "@lattice-php/form/rich-editor";
+import type { Node as WireNode } from "@lattice-php/core/types";
+import { useT } from "@lattice-php/ui/i18n";
+import { cn } from "@lattice-php/ui/lib/utils";
+import { Input } from "@lattice-php/ui/input";
+import { NativeSelect } from "@lattice-php/ui/native-select";
 
 const MediaImageDialog = lazy(() => import("./media-image-dialog"));
 
@@ -133,16 +137,16 @@ function InsertMediaImageControl({ editor, library }: { editor: Editor; library:
   );
 }
 
-export function registerMediaImage(): void {
-  registerRichEditorExtension("media-image", {
-    extensions: (props) => [MediaImageNode.configure({ conversions: props.conversions ?? [] })],
-    toolbar: (props) => [
-      {
-        key: "media-image",
-        component: ({ editor }) => (
-          <InsertMediaImageControl editor={editor} library={props.library ?? null} />
-        ),
-      },
-    ],
-  });
-}
+export const mediaImageExtension: RichEditorExtensionDefinition<
+  Partial<EditorExtensionPayloadOf<"media-image">>
+> = {
+  extensions: (props) => [MediaImageNode.configure({ conversions: props.conversions ?? [] })],
+  toolbar: (props) => [
+    {
+      key: "media-image",
+      component: ({ editor }) => (
+        <InsertMediaImageControl editor={editor} library={props.library ?? null} />
+      ),
+    },
+  ],
+};

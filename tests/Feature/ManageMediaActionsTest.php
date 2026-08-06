@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
-use Lattice\Lattice\Facades\Lattice;
+use Lattice\Core\Facades\Lattice;
 use Lattice\Media\Actions\DeleteMediaAction;
 use Lattice\Media\Actions\DeleteSelectedMediaAction;
 use Lattice\Media\Actions\UpdateMediaAction;

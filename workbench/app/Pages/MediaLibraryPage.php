@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace Workbench\App\Pages;
 
-use Lattice\Lattice\Attributes\AsPage;
-use Lattice\Lattice\Core\PageSchema;
+use Lattice\Core\Attributes\AsPage;
+use Lattice\Ui\PageSchema;
 use Lattice\Media\Components\MediaLibrary;
 
 #[AsPage(route: '/media')]

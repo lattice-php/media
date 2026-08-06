@@ -6,7 +6,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
-use Lattice\Lattice\Facades\Lattice;
+use Lattice\Core\Facades\Lattice;
 use Lattice\Media\Actions\UploadMediaAction;
 use Lattice\Media\Jobs\GenerateMediaConversions;
 use Lattice\Media\Models\Media;

@@ -2,8 +2,8 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Storage;
-use Lattice\Lattice\Facades\Lattice;
-use Lattice\Lattice\Tables\Components\Table;
+use Lattice\Core\Facades\Lattice;
+use Lattice\Table\Components\Table;
 use Lattice\Media\Models\Media;
 use Lattice\Media\Tables\MediaTable;
 

@@ -5,12 +5,12 @@ namespace Workbench\App\Tables;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use Lattice\Lattice\Attributes\AsTable;
-use Lattice\Lattice\Tables\Columns\Column;
-use Lattice\Lattice\Tables\Columns\ImageColumn;
-use Lattice\Lattice\Tables\Columns\TextColumn;
-use Lattice\Lattice\Tables\Sources\Eloquent\EloquentTableDefinition;
-use Lattice\Lattice\Tables\TableQuery;
+use Lattice\Table\Attributes\AsTable;
+use Lattice\Table\Columns\Column;
+use Lattice\Table\Columns\ImageColumn;
+use Lattice\Table\Columns\TextColumn;
+use Lattice\Table\Sources\Eloquent\EloquentTableDefinition;
+use Lattice\Table\TableQuery;
 use Workbench\App\Models\Product;
 
 /**

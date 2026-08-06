@@ -2,9 +2,9 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Validator;
-use Lattice\Lattice\Facades\Lattice;
-use Lattice\Lattice\Forms\Components\TextInput;
-use Lattice\Lattice\Forms\FormData;
+use Lattice\Core\Facades\Lattice;
+use Lattice\Form\Components\TextInput;
+use Lattice\Form\FormData;
 use Lattice\Media\Actions\DeleteMediaAction;
 use Lattice\Media\Actions\UpdateMediaAction;
 use Lattice\Media\Actions\UploadMediaAction;

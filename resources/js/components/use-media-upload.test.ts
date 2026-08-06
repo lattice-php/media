@@ -2,12 +2,32 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useMediaUpload } from "./use-media-upload";
 
-const apiFetch = vi.hoisted(() => vi.fn<() => Promise<Response>>());
+const apiFetch = vi.hoisted(() => vi.fn<(...args: unknown[]) => Promise<Response>>());
 
-vi.mock("@lattice-php/lattice/core/api", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@lattice-php/lattice/core/api")>()),
-  apiFetch,
-}));
+// The core package ships as one bundle, so every subpath specifier resolves to
+// the same module and the real requestSignedUpload calls its internal apiFetch,
+// bypassing a plain module mock. Register one consistent factory for both
+// specifiers, routing requestSignedUpload through the apiFetch mock while
+// keeping xhrTransfer real.
+const coreMock = vi.hoisted(
+  () => async (importOriginal: () => Promise<object>) => ({
+    ...(await importOriginal()),
+    apiFetch,
+    requestSignedUpload: (
+      endpoint: string,
+      { ref, target, filename, contentType, values }: import("@lattice-php/core/upload").SignedUploadRequest,
+    ) =>
+      apiFetch(endpoint, {
+        method: "POST",
+        ref,
+        body: JSON.stringify({ ...values, _sub: "upload", _target: target, filename, contentType }),
+        throwOnError: false,
+      }),
+  }),
+);
+
+vi.mock("@lattice-php/core/api", coreMock);
+vi.mock("@lattice-php/core/upload", coreMock);
 
 const reloadEffects = JSON.stringify({
   effects: [{ type: "reload-component", props: { component: "media.library" } }],

@@ -5,9 +5,9 @@ namespace Lattice\Media\Forms\RichEditor;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Gate;
-use Lattice\Lattice\Forms\RichContent;
-use Lattice\Lattice\Forms\RichEditor\Attributes\AsEditorExtension;
-use Lattice\Lattice\Forms\RichEditor\EditorExtension;
+use Lattice\Form\RichContent;
+use Lattice\Form\RichEditor\Attributes\AsEditorExtension;
+use Lattice\Form\RichEditor\EditorExtension;
 use Lattice\Media\Components\MediaLibrary;
 use Lattice\Media\Models\Media;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig;

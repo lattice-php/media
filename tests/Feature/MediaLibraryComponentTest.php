@@ -4,7 +4,7 @@ declare(strict_types=1);
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
-use Lattice\Lattice\Facades\Lattice;
+use Lattice\Core\Facades\Lattice;
 use Lattice\Media\Actions\DeleteMediaAction;
 use Lattice\Media\Actions\UpdateMediaAction;
 use Lattice\Media\Actions\UploadMediaAction;

@@ -1,5 +1,5 @@
-import type { ComponentPropsOf, Node, Schema } from "@lattice-php/lattice/core/types";
-import type { FormContextValue } from "@lattice-php/lattice/form/hooks/context";
+import type { ComponentPropsOf, Node, Schema } from "@lattice-php/core/types";
+import type { FormContextValue } from "@lattice-php/form/hooks/context";
 
 /** A complete no-op form context; override only what a case asserts on. */
 export function fakeFormContext(overrides: Partial<FormContextValue> = {}): FormContextValue {

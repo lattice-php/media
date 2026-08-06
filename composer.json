@@ -6,7 +6,7 @@
     "require": {
         "php": "^8.4",
         "intervention/image": "^4.0",
-        "lattice-php/lattice": ">=0.36.0 <1.0.0"
+        "lattice-php/lattice": "^0.40"
     },
     "require-dev": {
         "bambamboole/extended-testbench": "^0.6",
@@ -42,7 +42,9 @@
         },
         "lattice": {
             "plugin": "resources/js/plugin.ts",
-            "discover": ["src"]
+            "discover": [
+                "src"
+            ]
         },
         "laravel": {
             "providers": [

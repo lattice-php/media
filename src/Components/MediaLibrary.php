@@ -3,10 +3,10 @@ declare(strict_types=1);
 
 namespace Lattice\Media\Components;
 
-use Lattice\Lattice\Actions\Components\Action;
-use Lattice\Lattice\Attributes\AsComponent;
-use Lattice\Lattice\Tables\Components\Table;
-use Lattice\Lattice\Ui\Components\ContainerComponent;
+use Lattice\Actions\Components\Action;
+use Lattice\Core\Attributes\AsComponent;
+use Lattice\Table\Components\Table;
+use Lattice\Ui\Components\ContainerComponent;
 use Lattice\Media\Actions\DeleteMediaAction;
 use Lattice\Media\Actions\UpdateMediaAction;
 use Lattice\Media\Actions\UploadMediaAction;
