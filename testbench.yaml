@@ -29,6 +29,6 @@ workbench:
 providers:
   - Inertia\ServiceProvider
   - Bambamboole\LaravelI18Next\I18NextServiceProvider
-  - Lattice\Lattice\LatticeServiceProvider
+  - Lattice\LatticeServiceProvider
   - Lattice\Media\MediaServiceProvider
   - Workbench\App\Providers\WorkbenchServiceProvider
