@@ -1,10 +1,8 @@
-import { render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import * as richEditor from "@lattice-php/lattice/form/rich-editor";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import { StarterKit } from "@tiptap/starter-kit";
-import { describe, expect, it, vi } from "vitest";
-import { MediaImageNode, registerMediaImage } from "./media-image";
+import { describe, expect, it } from "vitest";
+import { MediaImageNode, mediaImageExtension } from "./media-image";
 
 function Harness({
   attrs,
@@ -31,7 +29,9 @@ function Harness({
 async function mountNode(attrs: Record<string, unknown>, conversions: string[] = []) {
   let editor: Editor | undefined;
   render(<Harness attrs={attrs} conversions={conversions} onEditor={(e) => (editor = e)} />);
-  await waitFor(() => expect(document.querySelector("[data-test=editor-media-image]")).not.toBeNull());
+  await waitFor(() =>
+    expect(document.querySelector("[data-test=editor-media-image]")).not.toBeNull(),
+  );
 
   return editor!;
 }
@@ -58,7 +58,7 @@ describe("MediaImageNode", () => {
     await waitFor(() =>
       expect(document.querySelector("[data-test=editor-media-image-controls]")).not.toBeNull(),
     );
-    await userEvent.type(screen.getByLabelText("Alt text"), "Better alt");
+    fireEvent.change(screen.getByLabelText("Alt text"), { target: { value: "Better alt" } });
 
     await waitFor(() => {
       const node = editor.getJSON().content?.find((child) => child.type === "mediaImage");
@@ -72,7 +72,7 @@ describe("MediaImageNode", () => {
 
     await waitFor(() => expect(screen.getByLabelText("Size")).not.toBeNull());
     expect(screen.getByRole("option", { name: "Original" })).not.toBeNull();
-    await userEvent.selectOptions(screen.getByLabelText("Size"), "hero");
+    fireEvent.change(screen.getByLabelText("Size"), { target: { value: "hero" } });
 
     await waitFor(() => {
       const node = editor.getJSON().content?.find((child) => child.type === "mediaImage");
@@ -81,21 +81,12 @@ describe("MediaImageNode", () => {
   });
 });
 
-describe("registerMediaImage", () => {
-  it("registers a definition that yields the node and one toolbar control", () => {
-    // `resolveRichEditorExtensions` is an internal lattice helper (not part of
-    // the package's public `form/rich-editor` export), so this asserts on the
-    // definition passed to the public `registerRichEditorExtension` instead.
-    const spy = vi.spyOn(richEditor, "registerRichEditorExtension");
-
-    registerMediaImage();
-
-    expect(spy).toHaveBeenCalledWith("media-image", expect.anything());
-    const definition = spy.mock.calls[0]![1];
+describe("mediaImageExtension", () => {
+  it("yields the node and one toolbar control", () => {
     const props = { conversions: ["hero"], library: null };
 
-    const extensions = definition.extensions!(props);
+    const extensions = mediaImageExtension.extensions!(props);
     expect(extensions[0]!.name).toBe("mediaImage");
-    expect(definition.toolbar!(props)).toHaveLength(1);
+    expect(mediaImageExtension.toolbar!(props)).toHaveLength(1);
   });
 });

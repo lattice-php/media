@@ -1,18 +1,28 @@
 import { lazy, Suspense, useState } from "react";
 import { mergeAttributes, Node, type Editor } from "@tiptap/core";
 import { NodeViewWrapper, ReactNodeViewRenderer, type NodeViewProps } from "@tiptap/react";
-import { registerRichEditorExtension, ToolbarIconButton } from "@lattice-php/lattice/form/rich-editor";
-import type { Node as WireNode } from "@lattice-php/lattice/core/types";
-import { useT } from "@lattice-php/lattice/i18n";
-import { cn } from "@lattice-php/lattice/lib/utils";
-import { Input } from "@lattice-php/lattice/ui/input";
-import { NativeSelect } from "@lattice-php/lattice/ui/native-select";
+import {
+  ToolbarIconButton,
+  type EditorExtensionPayloadOf,
+  type RichEditorExtensionDefinition,
+} from "@lattice-php/form/rich-editor";
+import type { Node as WireNode } from "@lattice-php/core/types";
+import { useT } from "@lattice-php/ui/i18n";
+import { cn } from "@lattice-php/ui/lib/utils";
+import { Input } from "@lattice-php/ui/input";
+import { NativeSelect } from "@lattice-php/ui/native-select";
 
 const MediaImageDialog = lazy(() => import("./media-image-dialog"));
 
 type MediaImageOptions = { conversions: string[] };
 
-export function MediaImageView({ editor, extension, node, selected, updateAttributes }: NodeViewProps) {
+export function MediaImageView({
+  editor,
+  extension,
+  node,
+  selected,
+  updateAttributes,
+}: NodeViewProps) {
   const { t } = useT("media");
   const conversions = (extension.options as MediaImageOptions).conversions;
   const url = node.attrs.url as string | null;
@@ -48,7 +58,9 @@ export function MediaImageView({ editor, extension, node, selected, updateAttrib
             <NativeSelect
               aria-label={t("media.editor.size", "Size")}
               onChange={(event) =>
-                updateAttributes({ conversion: event.target.value === "" ? null : event.target.value })
+                updateAttributes({
+                  conversion: event.target.value === "" ? null : event.target.value,
+                })
               }
               value={(node.attrs.conversion ?? "") as string}
             >
@@ -108,7 +120,13 @@ export const MediaImageNode = Node.create<MediaImageOptions>({
   },
 });
 
-function InsertMediaImageControl({ editor, library }: { editor: Editor; library: WireNode | null }) {
+function InsertMediaImageControl({
+  editor,
+  library,
+}: {
+  editor: Editor;
+  library: WireNode | null;
+}) {
   const { t } = useT("media");
   const [open, setOpen] = useState(false);
 
@@ -133,16 +151,16 @@ function InsertMediaImageControl({ editor, library }: { editor: Editor; library:
   );
 }
 
-export function registerMediaImage(): void {
-  registerRichEditorExtension("media-image", {
-    extensions: (props) => [MediaImageNode.configure({ conversions: props.conversions ?? [] })],
-    toolbar: (props) => [
-      {
-        key: "media-image",
-        component: ({ editor }) => (
-          <InsertMediaImageControl editor={editor} library={props.library ?? null} />
-        ),
-      },
-    ],
-  });
-}
+export const mediaImageExtension: RichEditorExtensionDefinition<
+  Partial<EditorExtensionPayloadOf<"media-image">>
+> = {
+  extensions: (props) => [MediaImageNode.configure({ conversions: props.conversions ?? [] })],
+  toolbar: (props) => [
+    {
+      key: "media-image",
+      component: ({ editor }) => (
+        <InsertMediaImageControl editor={editor} library={props.library ?? null} />
+      ),
+    },
+  ],
+};

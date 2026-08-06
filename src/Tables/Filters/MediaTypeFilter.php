@@ -4,11 +4,11 @@ declare(strict_types=1);
 namespace Lattice\Media\Tables\Filters;
 
 use Illuminate\Database\Eloquent\Builder;
-use Lattice\Lattice\Forms\Components\Select;
-use Lattice\Lattice\Forms\FormData;
-use Lattice\Lattice\Tables\Attributes\AsFilter;
-use Lattice\Lattice\Tables\Enums\FilterControl;
-use Lattice\Lattice\Tables\Filters\Filter;
+use Lattice\Form\Components\Select;
+use Lattice\Form\FormData;
+use Lattice\Table\Attributes\AsFilter;
+use Lattice\Table\Enums\FilterControl;
+use Lattice\Table\Filters\Filter;
 
 #[AsFilter(FilterControl::Select)]
 final class MediaTypeFilter extends Filter

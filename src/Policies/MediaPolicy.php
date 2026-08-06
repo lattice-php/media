@@ -4,32 +4,31 @@ declare(strict_types=1);
 namespace Lattice\Media\Policies;
 
 use Illuminate\Contracts\Auth\Authenticatable;
-use Lattice\Media\Models\Media;
 
 final class MediaPolicy
 {
     public function viewAny(?Authenticatable $user): bool
     {
-        return $user !== null;
+        return $user instanceof Authenticatable;
     }
 
     public function create(?Authenticatable $user): bool
     {
-        return $user !== null;
+        return $user instanceof Authenticatable;
     }
 
-    public function update(?Authenticatable $user, Media $media): bool
+    public function update(?Authenticatable $user): bool
     {
-        return $user !== null;
+        return $user instanceof Authenticatable;
     }
 
-    public function delete(?Authenticatable $user, Media $media): bool
+    public function delete(?Authenticatable $user): bool
     {
-        return $user !== null;
+        return $user instanceof Authenticatable;
     }
 
-    public function attach(?Authenticatable $user, Media $media): bool
+    public function attach(?Authenticatable $user): bool
     {
-        return $user !== null;
+        return $user instanceof Authenticatable;
     }
 }

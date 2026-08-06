@@ -1,4 +1,4 @@
-import type { RendererComponent } from "@lattice-php/lattice/core/types";
+import type { RendererComponent } from "@lattice-php/core/types";
 import { LibraryView } from "./components/library-view";
 
 const MediaLibraryComponent: RendererComponent<"media.library"> = ({ node }) => (

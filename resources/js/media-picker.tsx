@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { RenderNode } from "@lattice-php/lattice/core";
-import type { RendererComponent } from "@lattice-php/lattice/core/types";
-import { SimpleField } from "@lattice-php/lattice/form/components/fields/simple-field";
-import { FieldScopeProvider } from "@lattice-php/lattice/form/hooks/field-scope";
-import { translate, useT } from "@lattice-php/lattice/i18n";
-import { Button } from "@lattice-php/lattice/ui/button";
-import { Dialog, DialogContent, DialogHeader } from "@lattice-php/lattice/ui/dialog";
-import { IconButton } from "@lattice-php/lattice/ui/icon-button";
+import { RenderNode } from "@lattice-php/core";
+import type { RendererComponent } from "@lattice-php/core/types";
+import { SimpleField } from "@lattice-php/form/components/fields/simple-field";
+import { FieldScopeProvider } from "@lattice-php/form/hooks/field-scope";
+import { translate, useT } from "@lattice-php/ui/i18n";
+import { Button } from "@lattice-php/ui/button";
+import { Dialog, DialogContent, DialogHeader } from "@lattice-php/ui/dialog";
+import { IconButton } from "@lattice-php/ui/icon-button";
 import { LibraryView, type MediaRow } from "./components/library-view";
 
 type Picked = {
@@ -163,9 +163,7 @@ const MediaPickerComponent: RendererComponent<"field.media-picker"> = ({ node })
                             ]
                           : incoming.slice(0, 1);
 
-                        apply(
-                          multiple && maxFiles !== null ? merged.slice(0, maxFiles) : merged,
-                        );
+                        apply(multiple && maxFiles !== null ? merged.slice(0, maxFiles) : merged);
                         setOpen(false);
                       },
                     }}

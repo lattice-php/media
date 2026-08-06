@@ -1,15 +1,17 @@
 import "@lattice-php/lattice";
-import type { Node } from "@lattice-php/lattice/core/types";
+import type { Node } from "@lattice-php/core/types";
 import type { ColumnWidth, FieldConditions } from "@lattice-php/lattice/types/generated";
 
-declare module "@lattice-php/lattice" {
+declare module "@lattice-php/form/rich-editor/registry" {
   interface EditorExtensionProps {
     "media-image": {
       conversions: string[];
       library: Node | null;
     };
   }
+}
 
+declare module "@lattice-php/core" {
   interface ComponentProps {
     "media.library": {
       picker: boolean;

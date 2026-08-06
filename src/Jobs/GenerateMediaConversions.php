@@ -156,7 +156,7 @@ final class GenerateMediaConversions implements ShouldQueue
     {
         $conversions = $this->media->defaultConversions();
 
-        if ($this->attachable === null || ! method_exists($this->attachable, 'mediaConversions')) {
+        if (! $this->attachable instanceof Model || ! method_exists($this->attachable, 'mediaConversions')) {
             return $conversions;
         }
 

@@ -5,15 +5,15 @@ namespace Lattice\Media\Actions;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use Lattice\Lattice\Actions\ActionResult;
-use Lattice\Lattice\Actions\Components\Action;
-use Lattice\Lattice\Actions\FormActionDefinition;
-use Lattice\Lattice\Attributes\AsAction;
-use Lattice\Lattice\Forms\Components\Form;
-use Lattice\Lattice\Forms\Components\TextInput;
-use Lattice\Lattice\Ui\Enums\HttpMethod;
-use Lattice\Lattice\Ui\Enums\Variant;
+use Lattice\Actions\ActionResult;
+use Lattice\Actions\Components\Action;
+use Lattice\Actions\FormActionDefinition;
+use Lattice\Core\Attributes\AsAction;
+use Lattice\Form\Components\Form;
+use Lattice\Form\Components\TextInput;
 use Lattice\Media\Models\Media;
+use Lattice\Ui\Enums\HttpMethod;
+use Lattice\Ui\Enums\Variant;
 
 #[AsAction('media.update')]
 final class UpdateMediaAction extends FormActionDefinition

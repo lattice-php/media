@@ -1,10 +1,10 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { createPlugin, createRegistry, eagerComponent, RegistryContext } from "@lattice-php/lattice/core";
-import type { RendererComponent, Schema } from "@lattice-php/lattice/core/types";
-import { FormProvider } from "@lattice-php/lattice/form/hooks/context";
-import { useFieldScope } from "@lattice-php/lattice/form/hooks/field-scope";
-import { FormValuesProvider } from "@lattice-php/lattice/form/hooks/values";
+import { createRegistry, eagerComponent, RegistryContext } from "@lattice-php/core";
+import type { RendererComponent, Schema } from "@lattice-php/core/types";
+import { FormProvider } from "@lattice-php/form/hooks/context";
+import { useFieldScope } from "@lattice-php/form/hooks/field-scope";
+import { FormValuesProvider } from "@lattice-php/form/hooks/values";
 import { fakeFormContext, fakeNode } from "./test-support";
 import MediaPickerComponent from "./media-picker";
 
@@ -22,12 +22,16 @@ const CaptionField: RendererComponent<"field.text-input"> = ({ node }) => {
   );
 };
 
-const registry = createRegistry(
-  createPlugin({ name: "test", components: { "field.text-input": eagerComponent(CaptionField) } }),
-);
+const registry = createRegistry({
+  name: "test",
+  components: { "field.text-input": eagerComponent(CaptionField) },
+});
 
 function captionTemplate(): Schema {
-  return [...librarySchema([]), { type: "field.text-input", props: { name: "caption", label: "Caption" } }] as Schema;
+  return [
+    ...librarySchema([]),
+    { type: "field.text-input", props: { name: "caption", label: "Caption" } },
+  ] as Schema;
 }
 
 function libraryRow(id: number, name: string) {
@@ -62,7 +66,9 @@ function renderPicker(props: Record<string, unknown> = {}, schema?: Schema) {
       label: "Cover",
       multiple: false,
       maxFiles: null,
-      selected: [{ id: 7, name: "cover.jpg", url: null, preview_url: null, mime_type: "image/jpeg" }],
+      selected: [
+        { id: 7, name: "cover.jpg", url: null, preview_url: null, mime_type: "image/jpeg" },
+      ],
       ...props,
     },
     schema,
@@ -158,8 +164,22 @@ describe("MediaPickerComponent", () => {
         name: "gallery",
         multiple: true,
         selected: [
-          { id: 7, name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: { caption: "Front" } },
-          { id: 9, name: "b.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: {} },
+          {
+            id: 7,
+            name: "a.jpg",
+            url: null,
+            preview_url: null,
+            mime_type: "image/jpeg",
+            values: { caption: "Front" },
+          },
+          {
+            id: 9,
+            name: "b.jpg",
+            url: null,
+            preview_url: null,
+            mime_type: "image/jpeg",
+            values: {},
+          },
         ],
       },
       captionTemplate(),
@@ -188,8 +208,22 @@ describe("MediaPickerComponent", () => {
         name: "gallery",
         multiple: true,
         selected: [
-          { id: 7, name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: { caption: "Front" } },
-          { id: 9, name: "b.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: {} },
+          {
+            id: 7,
+            name: "a.jpg",
+            url: null,
+            preview_url: null,
+            mime_type: "image/jpeg",
+            values: { caption: "Front" },
+          },
+          {
+            id: 9,
+            name: "b.jpg",
+            url: null,
+            preview_url: null,
+            mime_type: "image/jpeg",
+            values: {},
+          },
         ],
       },
       captionTemplate(),
@@ -213,8 +247,22 @@ describe("MediaPickerComponent", () => {
         name: "gallery",
         multiple: true,
         selected: [
-          { id: 7, name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: { caption: "Front" } },
-          { id: 9, name: "b.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: { caption: "Back" } },
+          {
+            id: 7,
+            name: "a.jpg",
+            url: null,
+            preview_url: null,
+            mime_type: "image/jpeg",
+            values: { caption: "Front" },
+          },
+          {
+            id: 9,
+            name: "b.jpg",
+            url: null,
+            preview_url: null,
+            mime_type: "image/jpeg",
+            values: { caption: "Back" },
+          },
         ],
       },
       captionTemplate(),
@@ -232,7 +280,14 @@ describe("MediaPickerComponent", () => {
         name: "cover",
         multiple: false,
         selected: [
-          { id: 7, name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: { caption: "Front" } },
+          {
+            id: 7,
+            name: "a.jpg",
+            url: null,
+            preview_url: null,
+            mime_type: "image/jpeg",
+            values: { caption: "Front" },
+          },
         ],
       },
       captionTemplate(),
@@ -249,7 +304,14 @@ describe("MediaPickerComponent", () => {
         multiple: true,
         readOnly: true,
         selected: [
-          { id: 7, name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: { caption: "Front" } },
+          {
+            id: 7,
+            name: "a.jpg",
+            url: null,
+            preview_url: null,
+            mime_type: "image/jpeg",
+            values: { caption: "Front" },
+          },
         ],
       },
       captionTemplate(),
@@ -267,7 +329,14 @@ describe("MediaPickerComponent", () => {
         multiple: true,
         disabled: true,
         selected: [
-          { id: 7, name: "a.jpg", url: null, preview_url: null, mime_type: "image/jpeg", values: { caption: "Front" } },
+          {
+            id: 7,
+            name: "a.jpg",
+            url: null,
+            preview_url: null,
+            mime_type: "image/jpeg",
+            values: { caption: "Front" },
+          },
         ],
       },
       captionTemplate(),

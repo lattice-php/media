@@ -4,14 +4,14 @@ declare(strict_types=1);
 namespace Lattice\Media\Forms\Components;
 
 use Illuminate\Http\Request;
-use Lattice\Lattice\Forms\Attributes\AsField;
-use Lattice\Lattice\Forms\Components\Field;
-use Lattice\Lattice\Forms\Contracts\ProvidesRowFields;
-use Lattice\Lattice\Forms\FormData;
-use Lattice\Lattice\Ui\Components\Concerns\HasChildSchema;
+use Lattice\Form\Attributes\AsField;
+use Lattice\Form\Components\Field;
+use Lattice\Form\Contracts\ProvidesRowFields;
+use Lattice\Form\FormData;
 use Lattice\Media\Components\MediaLibrary;
 use Lattice\Media\Models\Media;
 use Lattice\Media\Rules\AttachableMedia;
+use Lattice\Ui\Components\Concerns\HasChildSchema;
 use LogicException;
 
 #[AsField(type: 'media-picker')]

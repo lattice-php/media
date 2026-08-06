@@ -10,7 +10,7 @@ and a form field that attaches media to any model through a polymorphic pivot.
 composer require lattice-php/media
 ```
 
-Requires `lattice-php/lattice` `>=0.29.0 <1.0.0`.
+Development happens in the [lattice-php/lattice monorepo](https://github.com/lattice-php/lattice); this repository is a read-only split. Please open issues and pull requests there.
 
 On the PHP side there is nothing to wire: the classes, migrations, config (`config/media.php`), and
 the default `Media` policy are picked up automatically. The React renderer ships as source and
@@ -186,13 +186,3 @@ The components' strings ship with inline English defaults. With
 [bambamboole/laravel-i18next](https://github.com/bambamboole/laravel-i18next) enabled, the plugin's
 `media` namespace is loaded automatically and serves the bundled `en`/`de` translations (override
 them like any Laravel package translation).
-
-## Development
-
-```bash
-composer install && npm install
-composer check          # pint --test, phpstan, rector --dry-run, pest (Unit + Feature)
-npm run typecheck && npm test
-composer test:browser   # rebuilds the workbench bundle, then runs the Playwright suite
-composer serve          # workbench demo app: /media (library) and /media-picker (field in a form)
-```

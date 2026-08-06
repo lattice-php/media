@@ -1,8 +1,8 @@
 import type { Dispatch, SetStateAction } from "react";
 import type { Editor } from "@tiptap/core";
-import type { Node as WireNode } from "@lattice-php/lattice/core/types";
-import { translate, useT } from "@lattice-php/lattice/i18n";
-import { Dialog, DialogContent, DialogHeader } from "@lattice-php/lattice/ui/dialog";
+import type { Node as WireNode } from "@lattice-php/core/types";
+import { translate, useT } from "@lattice-php/ui/i18n";
+import { Dialog, DialogContent, DialogHeader } from "@lattice-php/ui/dialog";
 import { LibraryView, type MediaRow } from "../components/library-view";
 
 /**
